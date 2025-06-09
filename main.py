@@ -70,17 +70,20 @@ def clear_last_lines(n=1):
         sys.stdout.write('\x1b[2K')
     line_count -= n
 
-
+todo_list = []
 DATA_FILE = "/Users/batukoraymasak/PycharmProjects/todo_app/todos.json"
+def update_todo_list():
+    global todo_list
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r", encoding="utf-16") as f:
+            try:
+                todo_list = json.load(f)
+            except json.JSONDecodeError:
+                todo_list = []
+    else:
+        todo_list = []
 
-if os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "r", encoding="utf-16") as f:
-        try:
-            todo_list = json.load(f)
-        except json.JSONDecodeError:
-            todo_list = []
-else:
-    todo_list = []
+update_todo_list()
 
 def todo_save_todos():
     with open(DATA_FILE, "w", encoding="utf-16") as f:
@@ -97,10 +100,13 @@ def todo_help():
         '\nType "todo cbaorder" to sort the TODO list in reverse alphabetical order.')
 
 def todo_list_view():
+    update_todo_list()
     print('My TODO List Content:')
+
     for i in range(len(todo_list)):
         print(f'{i+1}: {todo_list[i]}')
 def todo_ls():
+    global todo_list
     if not len(todo_list) == 0:
         todo_list_view()
     else:
@@ -137,12 +143,11 @@ def todo_delete_function():
                         print(f'Item  {item} was deleted.')
             elif indexes.lower() == 'all':
                 todo_list.clear()
-                todo_save_todos()
                 print('All items were deleted.')
-
-
     else:
         print('Your TODO list is empty.')
+
+    todo_save_todos()
 
 
 def todo_add():
