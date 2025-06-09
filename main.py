@@ -41,7 +41,7 @@ print(f"{colored_text}\033[0m")  # Neon cyperpunk header
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder','todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all','eval','clear','clr','open']
 command = ''
 
-line_count = 0
+
 _orig_print = builtins.print
 
 
@@ -50,7 +50,7 @@ def print(*args, **kwargs):
     Overrides the built-in print to count how many lines are output.
     Each call to print() is counted as at least one line, plus any embedded '\n'.
     """
-    global line_count
+
     # Call the real print
     _orig_print(*args, **kwargs)
 
@@ -58,20 +58,28 @@ def print(*args, **kwargs):
     sep = kwargs.get("sep", " ")
     text = sep.join(str(a) for a in args)
     printed_lines = text.splitlines() or [""]
-    line_count += len(printed_lines)
+
 
 # Monkey-patch builtins.print
 builtins.print = print
 
-def clear_last_lines(n=1):
+def clear_last_lines(n=1000):
     """Move cursor up n lines and clear each of them."""
-    global line_count
+
     for _ in range(n):
         # Move cursor up one line
         sys.stdout.write('\x1b[1A')
         # Clear entire line
         sys.stdout.write('\x1b[2K')
-    line_count -= n
+
+def clear_screen():
+    """Clear the terminal screen."""
+    if os.name == 'nt':  # For Windows
+        os.system('cls')
+    else:  # For Unix/Linux/Mac
+        os.system('clear')
+    print(f"{colored_text}\033[0m")  # Neon cyperpunk header
+
 
 todo_list = []
 DATA_FILE = "/Users/batukoraymasak/PycharmProjects/todo_app/todos.json"
@@ -96,9 +104,9 @@ def todo_help():
 
     print('Type "todo ls" for viewing the TODO list'
         '\nType "todo add <new TODO element>" to add new todo element to the list.'
-        '\nType "todo rm <Desired Target> to delete the desired target.'
+        '\nType "todo rm <Desired Target>" to delete the desired target.'
         '\nType "todo rm" to view deleting todo elements'
-        '\nType "todo changeorder to change the order of two TODO elements.'
+        '\nType "todo changeorder" to change the order of two TODO elements.'
         '\nType "todo abcorder" to sort the TODO list in alphabetical order.'
         '\nType "todo cbaorder" to sort the TODO list in reverse alphabetical order.')
 
@@ -116,7 +124,7 @@ def todo_ls():
         print('Your TODO list is empty.')
 
 def todo_delete_function():
-    global line_count
+
     if not len(todo_list) == 0:
         if len(command) != 7:
             try:
@@ -131,7 +139,7 @@ def todo_delete_function():
                               '\nSeperate the desired indexes with ",".'
                               '\nType "all" to delete all items.'
                               '\nType "exit" if you want to exit.\n')
-            line_count += 7
+
             if not indexes.lower() == 'exit' and not indexes.lower() == 'all':
                 indexes = indexes.split(',')
                 indexes.sort(reverse=True)
@@ -165,13 +173,13 @@ def todo_add():
         print(f'{Colors.RED}Error: The item "{command[9:]}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_changeorder():
-    global line_count
+
     if len(todo_list) < 2:
         print(f'{Colors.RED}You need at least two items in your TODO list to change their order.{Colors.RESET}')
         return
     todo_list_view()
     userinput = input('Type the indexes of the two TODO items you want to swap, separated by a comma (e.g., "1,2"): ')
-    line_count += 2
+
     num1 = userinput.split(',')[0].strip()
     num2 = userinput.split(',')[1].strip()
     try:
@@ -192,13 +200,13 @@ def todo_cbaorder():
 
 def todo_do_function():
     todo_list_view()
-    global line_count
+
     random1 = random.randint(1,10)
     random2 = random.randint(1,90)
     user_input = input('Type the index of the TODO item you are going to work on, and separate minute time with a comma'
           f'\n(Ex: Type "{random1}, {random2}" for doing the activity at index {random1} for {random2} minutes.)'
             '\nType "exit" to exit.\n')
-    line_count += 5
+
     if user_input.lower() == 'exit':
         return
     try:
@@ -253,12 +261,12 @@ def unknown_command():
 
 
 def main():
-    global line_count
+
     global command
     global commandarr
     global commandoriginal
     command = input("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('>>> ')) + "\033[0m").strip()
-    line_count += 1
+
     commandarr = [n for n in command.lower().split(' ') if n != '']
     commandoriginal = command.strip()
     command = command.lower().strip()
@@ -301,11 +309,11 @@ def main():
     elif commandarr[0] == 'chat' and len(commandarr) == 1:
         chat_function()
     elif commandarr[0] == 'exit' or commandarr[0] == 'quit' and len(commandarr) == 1:
-        clear_last_lines(100)
+        clear_screen()
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
         sys.exit(0)
     elif commandarr[0] == 'clear' or command == 'clr':
-        clear_last_lines(line_count)
+        clear_screen()
     elif command[0:4] == 'eval':
         try:
             result = eval(command[5:].replace('pi', str(math.pi)).replace('e',str(math.e)))
@@ -324,11 +332,11 @@ if __name__ == "__main__":
         try:
             main()
         except KeyboardInterrupt:
-            clear_last_lines(100)
+            clear_screen()
             print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
             break
         except Exception as e:
-            clear_last_lines(100)
+            clear_screen()
             print('sexception:', e)
             print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
             break
