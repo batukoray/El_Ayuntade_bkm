@@ -223,8 +223,6 @@ def todo_do_function():
 
 
 
-
-
 def open_function():
     app_name = command[5:].strip()
     try:
@@ -264,7 +262,7 @@ def unknown_command():
 while True:
     command = input("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('>>> ')) + "\033[0m").strip()
     line_count += 1
-    commandarr = command.lower().split(' ')
+    commandarr = [n for n in command.lower().split(' ') if n != '']
     commandoriginal = command.strip()
 
     command = command.lower().strip()
