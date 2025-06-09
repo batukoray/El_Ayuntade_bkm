@@ -7,21 +7,24 @@ import os
 import json
 import random
 
-
+# Colors:
+class Colors:
+    ORANGE = "\033[38;5;208m"
+    RESET = "\033[0m"
+    RED = "\033[31m"
 
 user_prompt = 'Enter a TODO.'
-help_content =('   Type todo help to see the commands for the TODO app.'
-                '\nType open <App Name> to open the desired application.'
-                '\nType "exit" to exit the program.'
-                '\nType "chat" to access the LLM.')
-# Updated neon colors: purple, pink, navy blue, light green, gold
-neon_colors = [
-    "\033[35m",  # purple
-    "\033[95m",  # bright pink
-    "\033[94m",  # bright navy blue
-    "\033[94m",  # bright light green
-]
-text = r"""
+help_content = ('Type "todo help" to see the commands for the TODO app.'
+              '\nType open <App Name> to open the desired application.'
+              '\nType "exit" to exit the program.'
+              '\nType "chat" to access the LLM.'
+              '\nType eval <expression> to evaluate a mathematical expression.'
+              '\nType "clear" or "clr" to clear the screen.'
+              '\nType "help" to see this help message again.'
+              '\nType "quit" to exit the program.')
+# Color theme of the program:
+neon_colors = ["\033[35m", "\033[95m","\033[94m",  "\033[94m"]
+maintext = r"""
 ██████  ██╗╔═██ ╔███    ███╗
 ██═╬═██ ██╚╝██╝ ║████  ████║
 ██████  █████   ║██╗████╔██║
@@ -32,10 +35,10 @@ Robot Human Assist By: Batu Koray Masak
 
 Type "help" to see the available commands.
 """
-colored_text = "".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(text))
+colored_text = "".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(maintext))
 print(f"{colored_text}\033[0m")  # Neon cyperpunk header
 
-commands = ['todo ls','todo del','todo add','help','exit','chat','quit']
+commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder','todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all','eval','clear','clr','open']
 command = ''
 
 line_count = 0
@@ -119,16 +122,16 @@ def todo_delete_function():
             try:
                 todo_list.remove(command[8:])
             except ValueError:
-                print(f'{command[8:]} was not found.')
+                print(f'{Colors.RED}{command[8:]} was not found.{Colors.RESET}')
             else:
                 print(f'{command[8:]} was deleted.')
         else:
             todo_list_view()
-            indexes = input(  'Type the index/indexes of the TODO list content or the name of the item that you want to delete. '
-                            '\nSeperate the desired indexes with ",".'
-                            '\nType "all" to delete all items.'
-                            '\nType "exit" if you want to exit.\n')
-            line_count += 6
+            indexes = input(  '\nType the index/indexes of the TODO list content or the name of the item that you want to delete. '
+                              '\nSeperate the desired indexes with ",".'
+                              '\nType "all" to delete all items.'
+                              '\nType "exit" if you want to exit.\n')
+            line_count += 7
             if not indexes.lower() == 'exit' and not indexes.lower() == 'all':
                 indexes = indexes.split(',')
                 indexes.sort(reverse=True)
@@ -138,7 +141,7 @@ def todo_delete_function():
                         item = todo_list[int(index)-1]
                         todo_list.remove(todo_list[int(index)-1])
                     except:
-                        print('Error: The item you are trying to delete does not exist.')
+                        print(f'{Colors.RED}Error: The item you are trying to delete does not exist{Colors.RESET}')
                     else:
                         print(f'Item  {item} was deleted.')
             elif indexes.lower() == 'all':
@@ -152,17 +155,19 @@ def todo_delete_function():
 
 def todo_add():
     global commandoriginal
-    if commandoriginal[9:] not in todo_list:
+    if commandoriginal[9:] not in todo_list and commandoriginal[9:] != '':
         todo_list.append(commandoriginal[9:])
         print(f'Added new TODO item: {commandoriginal[8:]}')
         todo_save_todos()
+    elif commandoriginal[9:] == '':
+        print(f"{Colors.RED}Error: You need to provide a name for the TODO item.{Colors.RESET}")
     else:
-        print(f'Error: The item "{command[9:]}" already exists in your TODO list.')
+        print(f'{Colors.RED}Error: The item "{command[9:]}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_changeorder():
     global line_count
     if len(todo_list) < 2:
-        print('You need at least two items in your TODO list to change their order.')
+        print(f'{Colors.RED}You need at least two items in your TODO list to change their order.{Colors.RESET}')
         return
     todo_list_view()
     userinput = input('Type the indexes of the two TODO items you want to swap, separated by a comma (e.g., "1,2"): ')
@@ -174,7 +179,7 @@ def todo_changeorder():
         todo_list[int(num1) - 1] = todo_list[int(num2) - 1]
         todo_list[int(num2) - 1] = temp
     except (IndexError, ValueError):
-        print('Error: Invalid input. Please enter valid indexes.')
+        print(f'{Colors.RED}Error: Invalid input. Please enter valid indexes.{Colors.RESET}')
 
 def todo_abcorder():
     global todo_list
@@ -201,10 +206,10 @@ def todo_do_function():
         index = int(user_input[0]) - 1
         time_minutes = int(user_input[1])
         if index < 0 or index >= len(todo_list):
-            print('Error: Index out of range. Please enter a valid index.')
+            print(f'{Colors.RED}Error: Index out of range. Please enter a valid index.{Colors.RESET}')
             return
         if time_minutes <= 0:
-            print('Error: Time must be a positive integer.')
+            print(f'{Colors.RED}Error: Time must be a positive integer.{Colors.RESET}')
             return
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.')))
         for i in range(time_minutes):
@@ -218,7 +223,7 @@ def todo_do_function():
         todo_save_todos()
 
     except:
-        print('Error: Invalid input format. Please use the format "index,time".')
+        print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 
 
@@ -235,37 +240,32 @@ def open_function():
 
 def chat_function():
     # TODO: This feature needs to be implemented.
-    print('This feature is  not implemented yet.')
+    print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
 def unknown_command():
     global command
+    global commandarr
     if command == "":
         return
-
-    typo = False
-    possible_command = None
-    for thething in commands:
-        if thething in command:
-            typo = True
-            possible_command = thething
-            break
-        if thething in command:
-            typo = True
-            possible_command = thething
-            break
-    if typo:
-        print(f'Unknown command: "{command}". Did you mean: "{possible_command}"?')
-    else:
-        print(f'Unknown command: "{command}". For help, type "help".')
+    # Find the closest command
+    closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command) if a != b) + abs(len(cmd) - len(command)))
+    print(f'{Colors.RED}Unknown command: "{command}". Did you mean "{closest_command}"?{Colors.RESET}')
 
 
-while True:
+def main():
+    global line_count
+    global command
+    global commandarr
+    global commandoriginal
     command = input("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('>>> ')) + "\033[0m").strip()
     line_count += 1
     commandarr = [n for n in command.lower().split(' ') if n != '']
     commandoriginal = command.strip()
-
     command = command.lower().strip()
+    # If the command is empty, return
+    if command == '':
+        clear_last_lines(1)
+        return
     # To Do App Commands:
     if commandarr[0] == 'todo' and len(commandarr) > 1:
         if commandarr[1] == 'help':
@@ -290,7 +290,8 @@ while True:
         elif commandarr[1] == 'do':
             todo_do_function()
         else:
-            print(f'Unknown TODO command: "{command[5:].strip()}". For help, type "todo help".')
+            # Print the closest command if the command is not recognized
+            unknown_command()
     elif commandarr[0] == 'todo' and len(commandarr) == 1:
         todo_help()
     elif commandarr[0] == 'open':
@@ -301,14 +302,13 @@ while True:
         chat_function()
     elif commandarr[0] == 'exit' or commandarr[0] == 'quit' and len(commandarr) == 1:
         clear_last_lines(100)
-        print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('Robot Human Assist By: Batu Koray Masak')))
-        break
+        print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
+        sys.exit(0)
     elif commandarr[0] == 'clear' or command == 'clr':
         clear_last_lines(line_count)
     elif command[0:4] == 'eval':
         try:
             result = eval(command[5:].replace('pi', str(math.pi)).replace('e',str(math.e)))
-            # if it’s an int or float, format with commas:
             if isinstance(result, (int, float)):
                 print(f"{result:,}")
             else:
@@ -317,3 +317,18 @@ while True:
             unknown_command()
     else:
         unknown_command()
+
+
+if __name__ == "__main__":
+    while True:
+        try:
+            main()
+        except KeyboardInterrupt:
+            clear_last_lines(100)
+            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
+            break
+        except Exception as e:
+            clear_last_lines(100)
+            print('sexception:', e)
+            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
+            break
