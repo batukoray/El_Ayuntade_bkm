@@ -112,11 +112,21 @@ def todo_delete_function():
     if not len(todo_list) == 0:
         if len(command) != 7:
             try:
-                todo_list.remove(command[8:])
+                todo_list.remove(commandoriginal[8:])
             except ValueError:
-                print(f'{Colors.RED}{command[8:]} was not found.{Colors.RESET}')
+                try:
+                    todo_list.remove(command[8:])
+                except ValueError:
+                    try:
+                        todo_list.remove(commandoriginal[8:].capitalize())
+                    except ValueError:
+                        print(f'{Colors.RED}{command[8:]} was not found.{Colors.RESET}')
+                    else:
+                        print(f'{commandoriginal[8:]} was deleted.')
+                else:
+                    print(f'{commandoriginal[8:]} was deleted.')
             else:
-                print(f'{command[8:]} was deleted.')
+                print(f'{commandoriginal[8:]} was deleted.')
         else:
             todo_list_view()
             indexes = input(  '\nType the index/indexes of the TODO list content or the name of the item that you want to delete. '
