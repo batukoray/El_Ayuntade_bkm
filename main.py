@@ -7,7 +7,6 @@ import os
 import json
 import random
 
-# Colors:
 class Colors:
     ORANGE = "\033[38;5;208m"
     RESET = "\033[0m"
@@ -24,6 +23,7 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "quit" to exit the program.')
 # Color theme of the program:
 neon_colors = ["\033[35m", "\033[95m","\033[94m",  "\033[94m"]
+
 maintext = r"""
 ██████  ██╗╔═██ ╔███    ███╗
 ██═╬═██ ██╚╝██╝ ║████  ████║
@@ -36,7 +36,7 @@ Robot Human Assist By: Batu Koray Masak
 Type "help" to see the available commands.
 """
 colored_text = "".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(maintext))
-print(f"{colored_text}\033[0m")  # Neon cyperpunk header
+print(f"{colored_text}\033[0m")  # Header
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder','todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all','eval','clear','clr','open']
 command = ''
@@ -45,23 +45,6 @@ command = ''
 _orig_print = builtins.print
 
 
-def print(*args, **kwargs):
-    """
-    Overrides the built-in print to count how many lines are output.
-    Each call to print() is counted as at least one line, plus any embedded '\n'.
-    """
-
-    # Call the real print
-    _orig_print(*args, **kwargs)
-
-    # Estimate printed lines
-    sep = kwargs.get("sep", " ")
-    text = sep.join(str(a) for a in args)
-    printed_lines = text.splitlines() or [""]
-
-
-# Monkey-patch builtins.print
-builtins.print = print
 
 def clear_last_lines(n=1000):
     """Move cursor up n lines and clear each of them."""
@@ -79,7 +62,7 @@ def clear_screen(text = True):
     else:  # For Unix/Linux/Mac
         os.system('clear')
     if text:
-        print(f"{colored_text}\033[0m")  # Neon cyperpunk header
+        print(f"{colored_text}\033[0m")  # Header
 
 
 todo_list = []
@@ -137,7 +120,7 @@ def todo_delete_function():
         else:
             todo_list_view()
             indexes = input(  '\nType the index/indexes of the TODO list content or the name of the item that you want to delete. '
-                              '\nSeperate the desired indexes with ",".'
+                              '\nSeparate the desired indexes with ",".'
                               '\nType "all" to delete all items.'
                               '\nType "exit" if you want to exit.\n')
 
@@ -149,7 +132,7 @@ def todo_delete_function():
                     try:
                         item = todo_list[int(index)-1]
                         todo_list.remove(todo_list[int(index)-1])
-                    except:
+                    except (IndexError, ValueError):
                         print(f'{Colors.RED}Error: The item you are trying to delete does not exist{Colors.RESET}')
                     else:
                         print(f'Item  {item} was deleted.')
@@ -226,12 +209,12 @@ def todo_do_function():
                 print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Minutes: {i}, Seconds: {j}, Percentage: {((i * 60 + j) / (time_minutes * 60)) * 100:.2f}%')))
                 time.sleep(1)
                 clear_last_lines(1)
-        clear_last_lines(1)  # Clear the last line after the timer
+        clear_last_lines(1)
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Finished working on "{todo_list[index]}".')))
         todo_list.pop(index)
         todo_save_todos()
 
-    except:
+    except (ValueError, IndexError):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 
@@ -241,7 +224,7 @@ def open_function():
     app_name = command[5:].strip()
     try:
         subprocess.run(['open', '-a', app_name], check=True)
-    except:
+    except subprocess.CalledProcessError:
         time.sleep(0.1)
     else:
         print(f'Opened "{app_name.capitalize()}".')
@@ -315,7 +298,7 @@ def main():
         sys.exit(0)
     elif commandarr[0] == 'clear' or command == 'clr':
         clear_screen()
-    elif command[0:4] == 'eval':
+    elif commandarr[0] == 'eval':
         try:
             result = eval(command[5:].replace('pi', str(math.pi)).replace('e',str(math.e)))
             if isinstance(result, (int, float)):
@@ -336,8 +319,7 @@ if __name__ == "__main__":
             clear_screen(text=False)
             print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('Goodbye! | Robot Human Assist By: Batu Koray Masak')))
             break
-        except Exception as e:
+        # Catch the specific control+d exception
+        except EOFError:
             clear_screen(text=False)
-            print('sexception:', e)
             print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('Goodbye! | Robot Human Assist By: Batu Koray Masak')))
-            break
