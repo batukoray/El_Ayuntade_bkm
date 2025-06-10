@@ -40,6 +40,8 @@ print(f"{colored_text}\033[0m")  # Header
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder','todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all','eval','clear','clr','open']
 command = ''
+commandarr = []
+commandoriginal = ''
 
 
 _orig_print = builtins.print
@@ -227,8 +229,6 @@ def todo_do_function():
     except (ValueError, IndexError):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
-
-
 
 def open_function():
     app_name = command[5:].strip()
