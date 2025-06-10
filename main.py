@@ -72,13 +72,14 @@ def clear_last_lines(n=1000):
         # Clear entire line
         sys.stdout.write('\x1b[2K')
 
-def clear_screen():
+def clear_screen(text = True):
     """Clear the terminal screen."""
     if os.name == 'nt':  # For Windows
         os.system('cls')
     else:  # For Unix/Linux/Mac
         os.system('clear')
-    print(f"{colored_text}\033[0m")  # Neon cyperpunk header
+    if text:
+        print(f"{colored_text}\033[0m")  # Neon cyperpunk header
 
 
 todo_list = []
@@ -332,11 +333,11 @@ if __name__ == "__main__":
         try:
             main()
         except KeyboardInterrupt:
-            clear_screen()
-            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
+            clear_screen(text=False)
+            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('Goodbye! | Robot Human Assist By: Batu Koray Masak')))
             break
         except Exception as e:
-            clear_screen()
+            clear_screen(text=False)
             print('sexception:', e)
-            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
+            print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('Goodbye! | Robot Human Assist By: Batu Koray Masak')))
             break
