@@ -7,6 +7,8 @@ import os
 import json
 import random
 
+
+
 class Colors:
     ORANGE = "\033[38;5;208m"
     RESET = "\033[0m"
@@ -27,13 +29,12 @@ neon_colors = ["\033[35m", "\033[95m","\033[94m",  "\033[94m"]
 maintext = r"""
 ██████  ██╗╔═██ ╔███    ███╗
 ██═╬═██ ██╚╝██╝ ║████  ████║
-██████  █████   ║██╗████╔██║
-██═╬═██ ██╔╗██╗ ║██╚╗██╔╝██║
+██████  █████   ║██╗████╔██║   Robot Human Assist By:
+██═╬═██ ██╔╗██╗ ║██╚╗██╔╝██║     Batu Koray Masak
 ██████  ██╝╚═██ ╚██ ╚══╝ ██╝
 
-Robot Human Assist By: Batu Koray Masak
-
 Type "help" to see the available commands.
+
 """
 colored_text = "".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(maintext))
 print(f"{colored_text}\033[0m")  # Header
@@ -223,12 +224,16 @@ def todo_do_function():
                 clear_last_lines(1)
         clear_last_lines(1)
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Finished working on "{todo_list[index]}".')))
+        write_worklogs(f'This person has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
         todo_list.pop(index)
         todo_save_todos()
 
     except (ValueError, IndexError):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
+def write_worklogs(Message):
+    with open("/Users/batukoraymasak/PycharmProjects/todo_app/worklogs.txt", "a") as f:
+        f.write(f'{Message}\n')
 
 def open_function():
     app_name = command[5:].strip()
