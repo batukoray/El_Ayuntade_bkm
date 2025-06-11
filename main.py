@@ -6,6 +6,7 @@ import math
 import os
 import json
 import random
+import user_data
 
 
 
@@ -224,7 +225,7 @@ def todo_do_function():
                 clear_last_lines(1)
         clear_last_lines(1)
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Finished working on "{todo_list[index]}".')))
-        write_worklogs(f'This person has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
+        write_worklogs(f'{user_data.username} has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
         todo_list.pop(index)
         todo_save_todos()
 
@@ -307,11 +308,11 @@ def main():
         print(help_content)
     elif commandarr[0] == 'chat' and len(commandarr) == 1:
         chat_function()
-    elif commandarr[0] == 'exit' or commandarr[0] == 'quit' and len(commandarr) == 1:
+    elif (commandarr[0] == 'exit' or commandarr[0] == 'quit') and len(commandarr) == 1:
         clear_screen()
         print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
         sys.exit(0)
-    elif commandarr[0] == 'clear' or command == 'clr':
+    elif (commandarr[0] == 'clear' or command == 'clr') and len(commandarr) == 1:
         clear_screen()
     elif commandarr[0] == 'eval':
         try:
