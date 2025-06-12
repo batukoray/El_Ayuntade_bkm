@@ -232,9 +232,9 @@ def todo_do_function():
     except (ValueError, IndexError):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
-def write_worklogs(Message):
+def write_worklogs(message):
     with open("/Users/batukoraymasak/PycharmProjects/todo_app/worklogs.txt", "a") as f:
-        f.write(f'{Message}\n')
+        f.write(f'{message}\n')
 
 def open_function():
     app_name = command[5:].strip()
