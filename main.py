@@ -80,13 +80,13 @@ def analyze_input(text_input):
                     case 'add':
                         todo_add(command_original)
                     case 'changeorder':
-                        todo_changeorder(command_original)
+                        todo_changeorder()
                     case 'abcorder':
                         todo_abcorder()
                     case 'cbaorder':
                         todo_cbaorder()
                     case 'do':
-                        todo_do_function(command_original)
+                        todo_do_function()
                     case _:
                         print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". '
                               f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
@@ -137,7 +137,7 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case _:
             print(command_arr)
-            unknown_command(command_lower)
+            unknown_command(command_original)
 
 def clear_last_lines(n):
     """Move cursor up n lines and clear each of them."""
@@ -194,6 +194,7 @@ def todo_list_view():
 
 def todo_ls():
     global todo_list
+    update_todo_list()
     if not len(todo_list) == 0:
         todo_list_view()
     else:
@@ -261,7 +262,7 @@ def todo_add(command_original):
     else:
         print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
-def todo_changeorder(command_original):
+def todo_changeorder():
     if len(todo_list) < 2:
         print(f'{Colors.RED}You need at least two items in your TODO list to change their order.{Colors.RESET}')
         return
@@ -290,7 +291,7 @@ def todo_cbaorder():
     todo_save()
     print('TODO list sorted in reverse alphabetical order.')
 
-def todo_do_function(command_original):
+def todo_do_function():
     todo_list_view()
 
     random1 = random.randint(1,10)
@@ -343,13 +344,13 @@ def chat_function():
     # TODO: This feature needs to be implemented.
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
-def unknown_command(command):
-    commandarr = [n for n in command.lower().split(' ') if n != '']
-    if command == "":
+def unknown_command(command_original):
+
+    if command_original == "":
         return
     # Find the closest command
-    closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command) if a != b) + abs(len(cmd) - len(command)))
-    print(f'{Colors.RED}Unknown command: "{command}". Did you mean "{closest_command}"?{Colors.RESET}')
+    closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_original) if a != b) + abs(len(cmd) - len(command_original)))
+    print(f'{Colors.RED}Unknown command: "{command_original}". Did you mean "{closest_command}"?{Colors.RESET}')
 
 
 def main():
