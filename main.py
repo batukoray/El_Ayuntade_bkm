@@ -330,6 +330,11 @@ def write_worklogs(message):
         f.write(f'{message}\n')
 
 def open_function(command_original):
+    """
+    This is a function to open applications on the system.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return:
+    """
     app_name = command_original[5:]
     try:
         subprocess.run(['open', '-a', app_name], check=True)
@@ -340,7 +345,9 @@ def open_function(command_original):
 
 
 def chat_function():
-    # TODO: This feature needs to be implemented.
+    """
+    This function is a placeholder for the AI chat functionality. #TODO: Implement the AI chat feature.
+    """
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
 def unknown_command(command_original):
