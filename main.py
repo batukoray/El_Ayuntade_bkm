@@ -40,7 +40,9 @@ Type "help" to see the available commands.
 colored_text = "".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(maintext))
 print(f"{colored_text}\033[0m")  # Header
 
-commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder','todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all','eval','clear','clr','open']
+commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
+            'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
+            'eval','clear','clr','open']
 command = ''
 commandarr = []
 commandoriginal = ''
@@ -48,8 +50,9 @@ commandoriginal = ''
 
 _orig_print = builtins.print
 
-def analyze_input(text):
-    global command, commandarr, commandoriginal
+def analyze_input(command):
+
+    global commandarr, commandoriginal
     commandarr = [n for n in command.lower().split(' ') if n != '']
     commandoriginal = command.strip()
     command = command.lower().strip()
@@ -58,58 +61,80 @@ def analyze_input(text):
         clear_last_lines(1)
         return
     # To Do App Commands:
-    if commandarr[0] == 'todo' and len(commandarr) > 1:
-        if commandarr[1] == 'help':
-            todo_help()
-        elif commandarr[1] == 'ls':
-            todo_ls()
-        elif commandarr[1] == 'rm':
-            if len(commandarr) > 2 and commandarr[2] == 'all':
-                todo_list.clear()
-                todo_save_todos()
-                print('All items were deleted.')
+    match commandarr[0]:
+        case 'todo':
+            if len(commandarr) >= 2:
+                match commandarr[1]:
+                    case 'help':
+                        todo_help()
+                    case 'ls':
+                        todo_ls()
+                    case 'rm':
+                        if len(commandarr) == 3 and commandarr[2] == 'all':
+                            todo_list.clear()
+                            todo_save_todos()
+                            print('All items were deleted.')
+                        elif len(commandarr) == 2:
+                            todo_delete_function()
+                    case 'add':
+                        todo_add()
+                    case 'changeorder':
+                        todo_changeorder()
+                    case 'abcorder':
+                        todo_abcorder()
+                    case 'cbaorder':
+                        todo_cbaorder()
+                    case 'do':
+                        todo_do_function()
+                    case _:
+                        # Print the closest command if the command is not recognized
+                        unknown_command()
             else:
-                todo_delete_function()
-        elif commandarr[1] == 'add':
-            todo_add()
-        elif commandarr[1] == 'changeorder':
-            todo_changeorder()
-        elif commandarr[1] == 'abcorder':
-            todo_abcorder()
-        elif commandarr[1] == 'cbaorder':
-            todo_cbaorder()
-        elif commandarr[1] == 'do':
-            todo_do_function()
-        else:
-            # Print the closest command if the command is not recognized
-            unknown_command()
-    elif commandarr[0] == 'todo' and len(commandarr) == 1:
-        todo_help()
-    elif commandarr[0] == 'open':
-        open_function()
-    elif commandarr[0] == 'help' and len(commandarr) == 1:
-        print(help_content)
-    elif commandarr[0] == 'chat' and len(commandarr) == 1:
-        chat_function()
-    elif (commandarr[0] == 'exit' or commandarr[0] == 'quit') and len(commandarr) == 1:
-        clear_screen()
-        print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in
+                todo_help()
+        case 'open':
+            if len(commandarr) > 1:
+                open_function()
+            else:
+                print(f'{Colors.RED}Error: You need to specify an application to open.{Colors.RESET}')
+        case 'help':
+            if len(commandarr) == 1:
+                print(help_content)
+            else:
+                print(f'{Colors.RED}Error: The "help" command does not take any arguments.{Colors.RESET}')
+        case 'chat':
+            if len(commandarr) == 1:
+                chat_function()
+            else:
+                print(f'{Colors.RED}Error: The "chat" command does not take any arguments.{Colors.RESET}') # TODO: Maybe it will take arguments in the future.
+        case 'exit' | 'quit':
+            if len(commandarr) == 1:
+                clear_screen()
+                print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in
                       enumerate('\nGoodbye! | Robot Human Assist By: Batu Koray Masak')))
-        sys.exit(0)
-    elif (commandarr[0] == 'clear' or command == 'clr') and len(commandarr) == 1:
-        clear_screen()
-    elif commandarr[0] == 'eval':
-        try:
-            result = eval(command[5:].replace('pi', str(math.pi)).replace('e', str(math.e)))
-            if isinstance(result, (int, float)):
-                print(f"{result:,}")
+                sys.exit(0)
             else:
-                print(result)
-        except Exception:
+                print(f'{Colors.RED}Error: The "exit" command does not take any arguments.{Colors.RESET}')
+        case 'clear' | 'clr':
+            if len(commandarr) == 1:
+                clear_screen()
+            else:
+                print(f'{Colors.RED}Error: The "clear" command does not take any arguments.{Colors.RESET}')
+        case 'eval':
+            if len(commandarr) > 1:
+                try:
+                    result = eval(command[5:].replace('pi', str(math.pi))
+                                  .replace('e', str(math.e))
+                                  .replace('^', '**'))
+                    if isinstance(result, (int, float)):
+                        print(f"{result:,}")
+                    else:
+                        print(result)
+                except Exception:
+                    print(f'{Colors.RED}Error: Invalid expression. Please use the format "eval <math_expression>".{Colors.RESET}')
+            else:
+                print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
+        case _:
             unknown_command()
-    else:
-        unknown_command()
-
 
 def clear_last_lines(n=1000):
     """Move cursor up n lines and clear each of them."""
