@@ -136,7 +136,6 @@ def analyze_input(text_input):
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case _:
-            print(command_arr)
             unknown_command(command_original)
 
 def clear_last_lines(n):
@@ -345,12 +344,12 @@ def chat_function():
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
 def unknown_command(command_original):
-
+    command_arr = command_original.split(' ')
     if command_original == "":
         return
     # Find the closest command
     closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_original) if a != b) + abs(len(cmd) - len(command_original)))
-    print(f'{Colors.RED}Unknown command: "{command_original}". Did you mean "{closest_command}"?{Colors.RESET}')
+    print(f'{Colors.RED}Unknown command: "{command_arr[0]}". Did you mean "{closest_command}"?{Colors.RESET}')
 
 
 def main():
