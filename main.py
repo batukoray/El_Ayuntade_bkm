@@ -312,9 +312,9 @@ def todo_do_function(command_original):
             print(f'{Colors.RED}Error: Time must be a positive integer.{Colors.RESET}')
             return
         for i in range(time_minutes):
-            for j in range(600):
-                print(neon_text(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.\nMinutes: {i}, Seconds: {int(j/10)}, Percentage: {((i * 60 + j/10) / (time_minutes * 60)) * 100:.2f}%'))
-                time.sleep(0.1)
+            for j in range(240):
+                print(neon_text(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.\nMinutes: {i}, Seconds: {int(j/4)}, Percentage: {((i * 60 + j/4) / (time_minutes * 60)) * 100:.2f}%'))
+                time.sleep(0.25)
                 clear_last_lines(2)
         clear_last_lines(1)
         print(neon_text(f'Finished working on "{todo_list[index]}".'))
@@ -326,7 +326,7 @@ def todo_do_function(command_original):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 def write_worklogs(message):
-    with open(f'{user_data.DATA_FILE}/worklogs.txt', "a") as f:
+    with open(f'{user_data.PROJECT_LOCATION}/worklogs.txt', "a") as f:
         f.write(f'{message}\n')
 
 def open_function(command_original):
