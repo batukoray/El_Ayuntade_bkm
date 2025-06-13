@@ -12,7 +12,6 @@ class Colors:
     RESET = "\033[0m"
     RED = "\033[31m"
 
-user_prompt = 'Enter a TODO.'
 help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType open <App Name> to open the desired application.'
               '\nType "exit" to exit the program.'
@@ -21,36 +20,36 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "clear" or "clr" to clear the screen.'
               '\nType "help" to see this help message again.'
               '\nType "quit" to exit the program.')
+
 # Color theme of the program:
 neon_colors = ["\033[35m", "\033[95m","\033[94m",  "\033[94m"]
 
 maintext = r"""
 ██████  ██╗╔═██ ╔███    ███╗
 ██═╬═██ ██╚╝██╝ ║████  ████║
-██████  █████   ║██╗████╔██║   Robot Human Assist By:
+██████  █████   ║██╗████╔██║      El Ayuntade By:
 ██═╬═██ ██╔╗██╗ ║██╚╗██╔╝██║     Batu Koray Masak
 ██████  ██╝╚═██ ╚██ ╚══╝ ██╝
 
 Type "help" to see the available commands.
 
 """
+goodbye_text = 'Goodbye! | El Ayuntade By: Batu Koray Masak'
 
-def neon_text(text):
-    """Returns the text with neon colors in a random pattern."""
-    return "".join(
-        f"{random.choice(neon_colors)}{char}"
-        for char in text
-    ) + Colors.RESET
-
-colored_text = ''.join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(maintext))
-print(f'{neon_text(maintext)}')  # Header
+def neon_text(text,randomness=True):
+    """
+    Returns the text with neon colors.
+    If randomness is True, it will randomly choose a color for each character.
+    If randomness is False, it will use a fixed color for each character.
+    """
+    if randomness:
+        return "".join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
+    else:
+        return ''.join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(text))
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
             'eval','clear','clr','open']
-user_input = ''
-
-
 
 def analyze_input(text_input):
     command_arr = [n for n in text_input.lower().split(' ') if n != '']
@@ -89,8 +88,10 @@ def analyze_input(text_input):
                     case 'do':
                         todo_do_function(command_original)
                     case _:
-                        # Print the closest command if the command is not recognized
-                        print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower) if a != b) + abs(len(cmd) - len(command_lower)))}"?{Colors.RESET}')
+                        print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". '
+                              f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
+                                                                                 if a != b) + abs(len(cmd) - len(command_lower)))}"?'
+                                                                                f'{Colors.RESET}')
             else:
                 todo_help()
         case 'open':
@@ -111,7 +112,7 @@ def analyze_input(text_input):
         case 'exit' | 'quit':
             if len(command_arr) == 1:
                 clear_screen(text=False)
-                print(neon_text('Goodbye! | Robot Human Assist By: Batu Koray Masak'))
+                print(neon_text(goodbye_text))
                 sys.exit(0)
             else:
                 print(f'{Colors.RED}Error: The "exit" command does not take any arguments.{Colors.RESET}')
@@ -135,9 +136,10 @@ def analyze_input(text_input):
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case _:
+            print(command_arr)
             unknown_command(command_lower)
 
-def clear_last_lines(n=1000):
+def clear_last_lines(n):
     """Move cursor up n lines and clear each of them."""
 
     for _ in range(n):
@@ -157,11 +159,10 @@ def clear_screen(text = True):
 
 
 todo_list = []
-DATA_FILE = "/Users/batukoraymasak/PycharmProjects/todo_app/todos.json"
 def update_todo_list():
     global todo_list
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-16") as f:
+    if os.path.exists(user_data.DATA_FILE):
+        with open(user_data.DATA_FILE, "r", encoding="utf-16") as f:
             try:
                 todo_list = json.load(f)
             except json.JSONDecodeError:
@@ -172,7 +173,7 @@ def update_todo_list():
 update_todo_list()
 
 def todo_save():
-    with open(DATA_FILE, "w", encoding="utf-16") as f:
+    with open(user_data.DATA_FILE, "w", encoding="utf-16") as f:
         json.dump(todo_list, f, ensure_ascii=False, indent=2)
 
 def todo_help():
@@ -250,15 +251,15 @@ def todo_delete_function(command_original):
 
 
 def todo_add(command_original):
-
-    if command_original[9:] not in todo_list and command_original[9:] != '':
-        todo_list.append(command_original[9:])
-        print(f'Added new TODO item: {command_original[8:]}')
+    item = command_original[len('todo add '):]
+    if item not in todo_list and item != '':
+        todo_list.append(item)
+        print(f'Added new TODO item: {item}')
         todo_save()
     elif command_original[9:] == '':
         print(f"{Colors.RED}Error: You need to provide a name for the TODO item.{Colors.RESET}")
     else:
-        print(f'{Colors.RED}Error: The item "{command_original[9:]}" already exists in your TODO list.{Colors.RESET}')
+        print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_changeorder(command_original):
     if len(todo_list) < 2:
@@ -310,14 +311,13 @@ def todo_do_function(command_original):
         if time_minutes <= 0:
             print(f'{Colors.RED}Error: Time must be a positive integer.{Colors.RESET}')
             return
-        print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.')))
         for i in range(time_minutes):
-            for j in range(60):
-                print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Minutes: {i}, Seconds: {j}, Percentage: {((i * 60 + j) / (time_minutes * 60)) * 100:.2f}%')))
-                time.sleep(1)
-                clear_last_lines(1)
+            for j in range(600):
+                print(neon_text(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.\nMinutes: {i}, Seconds: {int(j/10)}, Percentage: {((i * 60 + j/10) / (time_minutes * 60)) * 100:.2f}%'))
+                time.sleep(0.1)
+                clear_last_lines(2)
         clear_last_lines(1)
-        print("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(f'Finished working on "{todo_list[index]}".')))
+        print(neon_text(f'Finished working on "{todo_list[index]}".'))
         write_worklogs(f'{user_data.username} has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
         todo_list.pop(index)
         todo_save()
@@ -326,7 +326,7 @@ def todo_do_function(command_original):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 def write_worklogs(message):
-    with open("/Users/batukoraymasak/PycharmProjects/todo_app/worklogs.txt", "a") as f:
+    with open(f'{user_data.DATA_FILE}/worklogs.txt', "a") as f:
         f.write(f'{message}\n')
 
 def open_function(command_original):
@@ -356,15 +356,16 @@ def main():
     analyze_input(input("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('>>> ')) + "\033[0m").strip())
 
 if __name__ == "__main__":
+    print(f'{neon_text(maintext)}')  # Header
     while True:
         try:
             main()
         except KeyboardInterrupt:
             clear_screen(text=False)
-            print(neon_text('Goodbye! | Robot Human Assist By: Batu Koray Masak'))
+            print(neon_text(goodbye_text))
             break
         # Catch the specific control+d exception
         except EOFError:
             clear_screen(text=False)
-            print(neon_text('Goodbye! | Robot Human Assist By: Batu Koray Masak'))
+            print(neon_text(goodbye_text))
             break
