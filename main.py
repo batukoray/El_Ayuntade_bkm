@@ -360,7 +360,7 @@ def unknown_command(command_original):
 
 
 def main():
-    analyze_input(input("".join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate('>>> ')) + "\033[0m").strip())
+    analyze_input(input(neon_text('>>>')))
 
 if __name__ == "__main__":
     print(f'{neon_text(maintext)}')  # Header
