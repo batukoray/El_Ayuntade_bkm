@@ -8,6 +8,9 @@ import user_data
 import random
 
 class Colors:
+    """
+    This class contains color codes for terminal text formatting.
+    """
     ORANGE = "\033[38;5;208m"
     RESET = "\033[0m"
     RED = "\033[31m"
@@ -38,9 +41,10 @@ goodbye_text = 'Goodbye! | El Ayuntade By: Batu Koray Masak'
 
 def neon_text(text,randomness=True):
     """
-    Returns the text with neon colors.
-    If randomness is True, it will randomly choose a color for each character.
-    If randomness is False, it will use a fixed color for each character.
+This function takes a text input and returns it with neon colors applied to each character.
+    :param text: The text to be colored.
+    :param randomness: If True, each character will be colored randomly from the neon_colors list.
+    :return: A string with neon colors applied to each character.
     """
     if randomness:
         return "".join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
@@ -52,6 +56,11 @@ commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo
             'eval','clear','clr','open']
 
 def analyze_input(text_input):
+    """
+    This function analyzes the input text and executes the corresponding command.
+    :param text_input: The input text from the user.
+    :return: void
+    """
     command_arr = [n for n in text_input.lower().split(' ') if n != '']
     command_original = ' '.join(text_input.strip().split())
     command_lower = command_original.lower()
@@ -139,7 +148,11 @@ def analyze_input(text_input):
             unknown_command(command_original)
 
 def clear_last_lines(n):
-    """Move cursor up n lines and clear each of them."""
+    """
+    This function clears the last n lines in the terminal.
+    :param n: The number of lines to clear.
+    :return:
+    """
 
     for _ in range(n):
         # Move cursor up one line
@@ -148,7 +161,11 @@ def clear_last_lines(n):
         sys.stdout.write('\x1b[2K')
 
 def clear_screen(text = True):
-    """Clear the terminal screen."""
+    """
+    This function clears the terminal screen.
+    :param text: If True, it will print the main text after clearing the screen.
+    :return: void
+    """
     if os.name == 'nt':  # For Windows
         os.system('cls')
     else:  # For Unix/Linux/Mac
@@ -159,6 +176,10 @@ def clear_screen(text = True):
 
 todo_list = []
 def update_todo_list():
+    """
+    This function updates the TODO list by reading from a JSON file.
+    :return: void
+    """
     global todo_list
     if os.path.exists(user_data.DATA_FILE):
         with open(user_data.DATA_FILE, "r", encoding="utf-16") as f:
@@ -172,10 +193,18 @@ def update_todo_list():
 update_todo_list()
 
 def todo_save():
+    """
+    This function saves the current TODO list to a file in JSON format.
+    :return: void
+    """
     with open(user_data.DATA_FILE, "w", encoding="utf-16") as f:
         json.dump(todo_list, f, ensure_ascii=False, indent=2)
 
 def todo_help():
+    """
+    This function displays the help content for the TODO app.
+    :return: void
+    """
 
     print('Type "todo ls" for viewing the TODO list'
         '\nType "todo add <new TODO element>" to add new todo element to the list.'
@@ -186,12 +215,20 @@ def todo_help():
         '\nType "todo cbaorder" to sort the TODO list in reverse alphabetical order.')
 
 def todo_list_view():
+    """
+    This function displays the current content of the TODO list.
+    :return: void
+    """
     update_todo_list()
     print('My TODO List Content:')
     for i in range(len(todo_list)):
         print(f'{i+1}: {todo_list[i]}')
 
 def todo_ls():
+    """
+    This function lists the items in the TODO list.
+    :return: void
+    """
     global todo_list
     update_todo_list()
     if not len(todo_list) == 0:
@@ -200,6 +237,11 @@ def todo_ls():
         print('Your TODO list is empty.')
 
 def todo_delete_function(command_original):
+    """
+    This function deletes an item from the TODO list based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
     global todo_list
     command_lower = command_original.lower()
 
@@ -251,6 +293,11 @@ def todo_delete_function(command_original):
 
 
 def todo_add(command_original):
+    """
+    This function adds a new item to the TODO list based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
     item = command_original[len('todo add '):]
     if item not in todo_list and item != '':
         todo_list.append(item)
@@ -262,6 +309,10 @@ def todo_add(command_original):
         print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_changeorder():
+    """
+    This function changes the order of two items in the TODO list based on user input.
+    :return: void
+    """
     if len(todo_list) < 2:
         print(f'{Colors.RED}You need at least two items in your TODO list to change their order.{Colors.RESET}')
         return
@@ -280,17 +331,29 @@ def todo_changeorder():
         print(f'{Colors.RED}Error: Invalid input. Please enter valid indexes.{Colors.RESET}')
 
 def todo_abcorder():
+    """
+    This function sorts the TODO list in alphabetical order.
+    :return: void
+    """
     global todo_list
     todo_list = sorted(todo_list, key=lambda x: x.lower())
     todo_save()
     print('TODO list sorted in alphabetical order.')
 def todo_cbaorder():
+    """
+    This function sorts the TODO list in reverse alphabetical order.
+    :return: void
+    """
     global todo_list
     todo_list = sorted(todo_list, key=lambda x: x.lower(), reverse=True)
     todo_save()
     print('TODO list sorted in reverse alphabetical order.')
 
 def todo_do_function():
+    """
+    This function allows the user to work on a TODO item for a specified amount of time.
+    :return: void
+    """
     todo_list_view()
 
     random1 = random.randint(1,10)
@@ -326,6 +389,11 @@ def todo_do_function():
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 def write_worklogs(message):
+    """
+    This function writes a message to the worklogs file.
+    :param message: The message to be written to the worklogs file.
+    :return: void
+    """
     with open(f'{user_data.PROJECT_LOCATION}/worklogs.txt', "a") as f:
         f.write(f'{message}\n')
 
@@ -333,7 +401,7 @@ def open_function(command_original):
     """
     This is a function to open applications on the system.
     :param command_original: The original command input by the user without multiple whitespaces.
-    :return:
+    :return: void
     """
     app_name = command_original[5:]
     try:
@@ -346,11 +414,17 @@ def open_function(command_original):
 
 def chat_function():
     """
-    This function is a placeholder for the AI chat functionality. #TODO: Implement the AI chat feature.
+    This function is a placeholder for the AI chat feature.
+    :return: void
     """
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
 def unknown_command(command_original):
+    """
+    This function handles unknown commands by suggesting the closest command from the predefined list.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
     command_arr = command_original.split(' ')
     if command_original == "":
         return
@@ -360,10 +434,15 @@ def unknown_command(command_original):
 
 
 def main():
+    """
+    This is the main function that runs the program.
+    :return: void
+    """
     analyze_input(input(neon_text('>>>')))
 
 if __name__ == "__main__":
-    print(f'{neon_text(maintext)}')  # Header
+    clear_screen(text=True)
+
     while True:
         try:
             main()
