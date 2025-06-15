@@ -1,0 +1,11 @@
+# PyCharm IDE settings
+.idea/
+*.iml
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Virtual envs
+.venv/
+venv/

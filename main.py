@@ -181,8 +181,8 @@ def update_todo_list():
     :return: void
     """
     global todo_list
-    if os.path.exists(user_data.DATA_FILE):
-        with open(user_data.DATA_FILE, "r", encoding="utf-16") as f:
+    if os.path.exists(user_data.TODO_FILE_LOC):
+        with open(user_data.TODO_FILE_LOC, "r", encoding="utf-16") as f:
             try:
                 todo_list = json.load(f)
             except json.JSONDecodeError:
@@ -197,7 +197,7 @@ def todo_save():
     This function saves the current TODO list to a file in JSON format.
     :return: void
     """
-    with open(user_data.DATA_FILE, "w", encoding="utf-16") as f:
+    with open(user_data.TODO_FILE_LOC, "w", encoding="utf-16") as f:
         json.dump(todo_list, f, ensure_ascii=False, indent=2)
 
 def todo_help():
@@ -394,8 +394,8 @@ def write_worklogs(message):
     :param message: The message to be written to the worklogs file.
     :return: void
     """
-    with open(f'{user_data.PROJECT_LOCATION}/worklogs.txt', "a") as f:
-        f.write(f'{message}\n')
+    with open(user_data.WORKLOGS_FILE_LOC, "a") as f:
+        f.write(message + '\n')
 
 def open_function(command_original):
     """
