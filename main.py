@@ -113,7 +113,13 @@ def analyze_input(text_input):
                         checklist_list_view()
                     case 'add':
                         checklist_add(command_original)
-
+                    case 'rm':
+                        if len(command_arr) == 3 and command_arr[2] == 'all':
+                            checklist_dict.clear()
+                            checklist_save()
+                            print('All items were deleted from the checklist.')
+                        else:
+                            checklist_delete_function(command_original)
                     case _:
                         print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". '
                               f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
@@ -455,7 +461,7 @@ def checklist_list_view():
         print('Checklist Items:')
         for item, status in checklist_dict.items():
             status_symbol = '✓' if status else '✗'
-            print(f'{status_symbol} {item}')
+            print(f'{item} {status_symbol}')
     else:
         print('Your checklist is empty.')
 
@@ -475,6 +481,40 @@ def checklist_add(command_original):
     else:
         print(f'{Colors.RED}Error: The item "{item}" already exists in your checklist.{Colors.RESET}')
 
+def checklist_delete_function(command_original):
+    """
+    This function deletes an item from the checklist based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    global checklist_dict
+    command_lower = command_original.lower()
+
+    if not checklist_dict:
+        print('Your checklist is empty.')
+        return
+
+    if command_lower != 'check rm':
+        item = command_original[len('check rm '):]
+        if item in checklist_dict:
+            del checklist_dict[item]
+            checklist_save()
+            print(f'Item "{item}" was deleted from the checklist.')
+        else:
+            print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
+    else:
+        checklist_list_view()
+        item = input('Type the name of the item you want to delete or "all" to delete all items: ')
+        if item.lower() == 'all':
+            checklist_dict.clear()
+            checklist_save()
+            print('All items were deleted from the checklist.')
+        elif item in checklist_dict:
+            del checklist_dict[item]
+            checklist_save()
+            print(f'Item "{item}" was deleted from the checklist.')
+        else:
+            print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
 # TODO: more functions needed
 
 # Checklist app functions end
