@@ -53,7 +53,7 @@ This function takes a text input and returns it with neon colors applied to each
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
-            'eval','clear','clr','open']
+            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help']
 
 def analyze_input(text_input):
     """
@@ -77,7 +77,7 @@ def analyze_input(text_input):
                     case 'help':
                         todo_help()
                     case 'ls':
-                        todo_ls()
+                        todo_list_view()
                     case 'rm':
                         if len(command_arr) == 3 and command_arr[2] == 'all':
                             todo_list.clear()
@@ -96,13 +96,32 @@ def analyze_input(text_input):
                         todo_cbaorder()
                     case 'do':
                         todo_do_function()
+                    # TODO: Add more commands here.
                     case _:
                         print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". '
                               f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
-                                                                                 if a != b) + abs(len(cmd) - len(command_lower)))}"?'
-                                                                                f'{Colors.RESET}')
+                              if a != b) + abs(len(cmd) - len(command_lower)))}"?'
+                              f'{Colors.RESET}')
             else:
                 todo_help()
+        case 'check':
+            if len(command_arr) >= 2:
+                match command_arr[1]:
+                    case 'help':
+                        checklist_help()
+                    case 'ls':
+                        checklist_list_view()
+                    case 'add':
+                        checklist_add(command_original)
+
+                    case _:
+                        print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". '
+                              f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
+                              if a != b) + abs(len(cmd) - len(command_lower)))}"?'
+                              f'{Colors.RESET}')
+
+            else:
+                checklist_help()
         case 'open':
             if len(command_arr) > 1:
                 open_function(command_original)
@@ -174,7 +193,9 @@ def clear_screen(text = True):
         print(f"{neon_text(maintext)}\033[0m")  # Header
 
 
+# TODO App:
 todo_list = []
+
 def update_todo_list():
     """
     This function updates the TODO list by reading from a JSON file.
@@ -224,17 +245,21 @@ def todo_list_view():
     for i in range(len(todo_list)):
         print(f'{i+1}: {todo_list[i]}')
 
-def todo_ls():
+def todo_add(command_original):
     """
-    This function lists the items in the TODO list.
+    This function adds a new item to the TODO list based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
     :return: void
     """
-    global todo_list
-    update_todo_list()
-    if not len(todo_list) == 0:
-        todo_list_view()
+    item = command_original[len('todo add '):]
+    if item not in todo_list and item != '':
+        todo_list.append(item)
+        print(f'Added new TODO item: {item}')
+        todo_save()
+    elif command_original[9:] == '':
+        print(f"{Colors.RED}Error: You need to provide a name for the TODO item.{Colors.RESET}")
     else:
-        print('Your TODO list is empty.')
+        print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_delete_function(command_original):
     """
@@ -290,23 +315,6 @@ def todo_delete_function(command_original):
         print('Your TODO list is empty.')
 
     todo_save()
-
-
-def todo_add(command_original):
-    """
-    This function adds a new item to the TODO list based on the command input.
-    :param command_original: The original command input by the user without multiple whitespaces.
-    :return: void
-    """
-    item = command_original[len('todo add '):]
-    if item not in todo_list and item != '':
-        todo_list.append(item)
-        print(f'Added new TODO item: {item}')
-        todo_save()
-    elif command_original[9:] == '':
-        print(f"{Colors.RED}Error: You need to provide a name for the TODO item.{Colors.RESET}")
-    else:
-        print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
 def todo_changeorder():
     """
@@ -396,6 +404,80 @@ def write_worklogs(message):
     """
     with open(user_data.WORKLOGS_FILE_LOC, "a") as f:
         f.write(message + '\n')
+
+# Checklist App:
+checklist_dict = {}
+
+def update_checklist():
+    """
+    This function updates the checklist items by reading from a JSON file.
+    :return: void
+    """
+    global checklist_dict
+    if os.path.exists(user_data.CHECKLIST_FILE_LOC):
+        with open(user_data.CHECKLIST_FILE_LOC, "r", encoding="utf-16") as f:
+            try:
+                checklist_dict = json.load(f)
+            except json.JSONDecodeError:
+                checklist_dict = {}
+    else:
+        checklist_dict = {}
+
+update_checklist()
+
+def checklist_save():
+    """
+    This function saves the current checklist items to a file in JSON format.
+    :return: void
+    """
+    with open(user_data.CHECKLIST_FILE_LOC, "w", encoding="utf-16") as f:
+        json.dump(checklist_dict, f, ensure_ascii=False, indent=2)
+
+def checklist_help():
+    """
+    This function displays the help content for the checklist app.
+    :return: void
+    """
+    print('Type "check ls" to view the checklist items.'
+          '\nType "check add <new item>" to add a new item to the checklist.'
+          '\nType "check rm <item>" to remove an item from the checklist.'
+          '\nType "check rm all" to remove all items from the checklist.'
+          '\nType "check help" to see this help message again.')
+
+def checklist_list_view():
+    """
+    This function prints the items in the checklist.
+    :return: void
+    """
+    global checklist_dict
+    update_checklist()
+    if checklist_dict:
+        print('Checklist Items:')
+        for item, status in checklist_dict.items():
+            status_symbol = '✓' if status else '✗'
+            print(f'{status_symbol} {item}')
+    else:
+        print('Your checklist is empty.')
+
+def checklist_add(command_original):
+    """
+    This function adds a new item to the checklist based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    item = command_original[len('check add '):]
+    if item and item not in checklist_dict:
+        checklist_dict[item] = False  # Default status is unchecked
+        checklist_save()
+        print(f'Added new checklist item: {item}')
+    elif item == '':
+        print(f"{Colors.RED}Error: You need to provide a name for the checklist item.{Colors.RESET}")
+    else:
+        print(f'{Colors.RED}Error: The item "{item}" already exists in your checklist.{Colors.RESET}')
+
+# TODO: more functions needed
+
+# Checklist app functions end
 
 def open_function(command_original):
     """
