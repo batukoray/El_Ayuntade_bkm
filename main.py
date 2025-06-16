@@ -47,7 +47,7 @@ This function takes a text input and returns it with neon colors applied to each
     :return: A string with neon colors applied to each character.
     """
     if randomness:
-        return "".join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
+        return ''.join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
     else:
         return ''.join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(text))
 
@@ -319,7 +319,6 @@ def todo_delete_function(command_original):
                 print('All items were deleted.')
     else:
         print('Your TODO list is empty.')
-
     todo_save()
 
 def todo_changeorder():
@@ -353,6 +352,7 @@ def todo_abcorder():
     todo_list = sorted(todo_list, key=lambda x: x.lower())
     todo_save()
     print('TODO list sorted in alphabetical order.')
+
 def todo_cbaorder():
     """
     This function sorts the TODO list in reverse alphabetical order.
@@ -373,8 +373,8 @@ def todo_do_function():
     random1 = random.randint(1,10)
     random2 = random.randint(1,90)
     user_input = input('Type the index of the TODO item you are going to work on, and separate minute time with a comma'
-          f'\n(Ex: Type "{random1}, {random2}" for doing the activity at index {random1} for {random2} minutes.)'
-            '\nType "exit" to exit.\n')
+                   f'\n(Ex: Type "{random1}, {random2}" for doing the activity at index {random1} for {random2} minutes.)'
+                     '\nType "exit" to exit.\n')
 
     if user_input.lower() == 'exit':
         return
@@ -402,6 +402,7 @@ def todo_do_function():
     except (ValueError, IndexError):
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
+
 def write_worklogs(message):
     """
     This function writes a message to the worklogs file.
@@ -410,6 +411,7 @@ def write_worklogs(message):
     """
     with open(user_data.WORKLOGS_FILE_LOC, "a") as f:
         f.write(message + '\n')
+
 
 # Checklist App:
 checklist_dict = {}
@@ -515,9 +517,10 @@ def checklist_delete_function(command_original):
             print(f'Item "{item}" was deleted from the checklist.')
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
+
 # TODO: more functions needed
 
-# Checklist app functions end
+# Checklist app end
 
 def open_function(command_original):
     """
@@ -564,7 +567,6 @@ def main():
 
 if __name__ == "__main__":
     clear_screen(text=True)
-
     while True:
         try:
             main()
