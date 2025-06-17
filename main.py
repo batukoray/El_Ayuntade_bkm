@@ -323,8 +323,9 @@ def todo_delete_function(command_original):
 
                 for index in indexes:
                     try:
-                        item = todo_list[int(index)-1]
-                        todo_list.remove(todo_list[int(index)-1])
+                        if 0 <= int(index) <= len(todo_list):
+                            item = todo_list[int(index)-1]
+                            todo_list.remove(todo_list[int(index)-1])
                     except (IndexError, ValueError):
                         print(f'{Colors.RED}Error: The item you are trying to delete does not exist{Colors.RESET}')
                     else:
@@ -465,7 +466,9 @@ def checklist_help():
           '\nType "check add <new item>" to add a new item to the checklist.'
           '\nType "check rm <item>" to remove an item from the checklist.'
           '\nType "check rm all" to remove all items from the checklist.'
-          '\nType "check help" to see this help message again.')
+          '\nType "check help" to see this help message again.'
+          '\nType "check -check <item_name or index_of_item>" to mark an item as done.'
+          '\nType "check -uncheck <item_name or index_of_item>" to mark an item as undone.')
 
 def checklist_list_view():
     """
@@ -526,7 +529,7 @@ def checklist_delete_function(command_original):
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
     else:
         checklist_list_view()
-        item = input('Type the name of the item you want to delete or "all" to delete all items: ')
+        item = input('Type the name of the item you want to delete, or the index of the item you want to delete, or "all" to delete all items: ')
         if item.lower() == 'all':
             checklist_dict.clear()
             checklist_save()
@@ -535,6 +538,18 @@ def checklist_delete_function(command_original):
             del checklist_dict[item]
             checklist_save()
             print(f'Item "{item}" was deleted from the checklist.')
+        elif item.isdigit():
+            try:
+                index = int(item) - 1
+                if 0 <= index < len(checklist_dict):
+                    item_to_delete = list(checklist_dict.keys())[index]
+                    del checklist_dict[item_to_delete]
+                    checklist_save()
+                    print(f'Item "{item_to_delete}" was deleted from the checklist.')
+                else:
+                    print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+            except ValueError:
+                print(f'{Colors.RED}Error: Invalid index format.{Colors.RESET}')
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
 
