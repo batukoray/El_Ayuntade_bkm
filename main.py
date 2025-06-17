@@ -8,8 +8,6 @@ import user_data
 import random
 import io
 
-
-
 class Colors:
     """
     This class contains color codes for terminal text formatting.
@@ -46,16 +44,17 @@ def neon_text(text,randomness=True,neon_map_num = 0):
 This function takes a text input and returns it with neon colors applied to each character.
     :param text: The text to be colored.
     :param randomness: If True, each character will be colored randomly from the neon_colors list.
+    :param neon_map_num: An integer used to map the colors in a specific order.
     :return: A string with neon colors applied to each character.
     """
     if randomness:
         return ''.join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
     else:
-        return ''.join(f"{neon_colors[(i-neon_map_num) % len(neon_colors)]}{char}" for i, char in enumerate(text))
+        return ''.join(f"{neon_colors[(j-neon_map_num) % len(neon_colors)]}{char}" for j, char in enumerate(text))
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
-            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help']
+            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help', 'check -check', 'check -uncheck', 'animate', 'animation', 'anim']
 
 def analyze_input(text_input):
     """
@@ -100,10 +99,7 @@ def analyze_input(text_input):
                         todo_do_function()
                     # TODO: Add more commands here.
                     case _:
-                        print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". '
-                              f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
-                              if a != b) + abs(len(cmd) - len(command_lower)))}"?'
-                              f'{Colors.RESET}')
+                        unknown_command(command_original,app_name='todo')
             else:
                 todo_help()
         case 'check':
@@ -127,10 +123,7 @@ def analyze_input(text_input):
                     case '-uncheck':
                         checklist_mark(command_original,check=False)
                     case _:
-                        print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". '
-                              f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
-                              if a != b) + abs(len(cmd) - len(command_lower)))}"?'
-                              f'{Colors.RESET}')
+                        unknown_command(command_original,app_name='check')
 
             else:
                 checklist_help()
@@ -175,6 +168,8 @@ def analyze_input(text_input):
                     print(f'{Colors.RED}Error: Invalid expression. Please use the format "eval <math_expression>".{Colors.RESET}')
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
+        case 'animate' | 'animation' | 'anim':
+            animate_logo(25)
         case _:
             unknown_command(command_original)
 
@@ -196,6 +191,7 @@ def clear_screen(text = True,randomness=True,clear_technique='os'):
     This function clears the terminal screen.
     :param text: If True, it will print the main text after clearing the screen.
     :param randomness: If True, the main text will be colored randomly. If False, it will use a fixed color pattern.
+    :param clear_technique: The technique to clear the screen. 'os' for using os.system, 'ascii' for using ANSI escape codes.
     :return: void
     """
     if clear_technique == 'os':
@@ -248,6 +244,8 @@ def todo_help():
     print('Type "todo ls" for viewing the TODO list'
         '\nType "todo add <new TODO element>" to add new todo element to the list.'
         '\nType "todo rm <Desired Target>" to delete the desired target.'
+        '\nType "todo rm <Desired Index>" to delete the desired index.'
+        '\nType "todo rm all" to delete all items from the TODO list.'
         '\nType "todo rm" to view deleting todo elements'
         '\nType "todo changeorder" to change the order of two TODO elements.'
         '\nType "todo abcorder" to sort the TODO list in alphabetical order.'
@@ -263,8 +261,8 @@ def todo_list_view():
         print('Your TODO list is empty.')
         return
     print('My TODO List Content:')
-    for i in range(len(todo_list)):
-        print(f'{i+1}: {todo_list[i]}')
+    for j in range(len(todo_list)):
+        print(f'{j+1}: {todo_list[j]}')
 
 def todo_add(command_original):
     """
@@ -273,6 +271,9 @@ def todo_add(command_original):
     :return: void
     """
     item = command_original[len('todo add '):]
+    if item.isdigit():
+        print(f'{Colors.RED}Error: The item name cannot be a number.{Colors.RESET}')
+        return
     if item not in todo_list and item != '':
         todo_list.append(item)
         print(f'Added new TODO item: {item}')
@@ -292,6 +293,19 @@ def todo_delete_function(command_original):
     command_lower = command_original.lower()
 
     if not len(todo_list) == 0:
+        if command_lower[len('todo rm '):].isdigit():
+            try:
+                index = int(command_original[8:]) - 1
+                if 0 <= index < len(todo_list):
+                    item = todo_list[index]
+                    todo_list.remove(item)
+                    print(f'Item "{item}" was deleted.')
+                    todo_save()
+                else:
+                    print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+            except ValueError:
+                print(f'{Colors.RED}Error: Invalid input. Please enter a valid index.{Colors.RESET}')
+            return
         if command_lower != 'todo rm':
             try:
                 todo_list.remove(command_original[8:])
@@ -320,11 +334,18 @@ def todo_delete_function(command_original):
             if not indexes.lower() == 'exit' and not indexes.lower() == 'all':
                 indexes = indexes.split(',')
                 indexes.sort(reverse=True)
+                try:
+                    if int(max(indexes)) > len(todo_list) or int(min(indexes)) < 1:
+                        print(f'{Colors.RED}Error: The index you are trying to delete is out of range.{Colors.RESET}')
+                        return
+                except ValueError:
+                    print(f'{Colors.RED}Error: Invalid input.{Colors.RESET}')
+                    return
 
                 for index in indexes:
                     try:
+                        item = todo_list[int(index) - 1]
                         if 0 <= int(index) <= len(todo_list):
-                            item = todo_list[int(index)-1]
                             todo_list.remove(todo_list[int(index)-1])
                     except (IndexError, ValueError):
                         print(f'{Colors.RED}Error: The item you are trying to delete does not exist{Colors.RESET}')
@@ -404,9 +425,10 @@ def todo_do_function():
         if time_minutes <= 0:
             print(f'{Colors.RED}Error: Time must be a positive integer.{Colors.RESET}')
             return
-        for i in range(time_minutes):
-            for j in range(240):
-                print(neon_text(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.\nMinutes: {i}, Seconds: {int(j/4)}, Percentage: {((i * 60 + j/4) / (time_minutes * 60)) * 100:.2f}%'))
+
+        for j in range(time_minutes):
+            for k in range(240):
+                print(neon_text(f'Starting work on "{todo_list[index]}" for {time_minutes} minutes.\nMinutes: {j}, Seconds: {int(k/4)}, Percentage: {((j * 60 + k/4) / (time_minutes * 60)) * 100:.2f}%'))
                 time.sleep(0.25)
                 clear_last_lines(2)
         clear_last_lines(1)
@@ -479,10 +501,10 @@ def checklist_list_view():
     update_checklist()
     if checklist_dict:
         print('Checklist Items:')
-        for i in range(len(checklist_dict)):
-            item = list(checklist_dict.keys())[i]
+        for j in range(len(checklist_dict)):
+            item = list(checklist_dict.keys())[j]
             status = '✓' if checklist_dict[item] else '✗'
-            print(f'{i + 1}: {item} -> {status}')
+            print(f'{j + 1}: {item} -> {status}')
     else:
         print('Your checklist is empty.')
 
@@ -553,10 +575,11 @@ def checklist_delete_function(command_original):
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
 
-def checklist_mark(command_original,check):
+def checklist_mark(command_original,check:bool):
     """
     This function marks an item in the checklist as done or not done based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
+    :param check: A boolean value indicating whether to mark the item as done (True) or not done (False).
     :return: void check -check item
     """
     global checklist_dict
@@ -599,6 +622,23 @@ def open_function(command_original):
     else:
         print(f'Opened "{app_name.capitalize()}".')
 
+def animate_logo(n=12):
+    """
+    This function animates the logo by printing it with different neon colors.
+    :param n: The number of iterations for the animation.
+    :return: void
+    """
+    try:
+        for j in range(n):
+            clear_screen(text=False,randomness=True,clear_technique='ascii')
+            print(neon_text(maintext,randomness=False,neon_map_num=j))
+            time.sleep(0.05)
+        clear_screen(text=True,randomness=False)
+    except:
+        clear_screen(text=False)
+        print(neon_text(goodbye_text))
+        sys.exit(0)
+
 
 def chat_function():
     """
@@ -607,18 +647,24 @@ def chat_function():
     """
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
-def unknown_command(command_original):
+def unknown_command(command_original, app_name=None):
     """
     This function handles unknown commands by suggesting the closest command from the predefined list.
     :param command_original: The original command input by the user without multiple whitespaces.
+    :param app_name: The name of the application (e.g., 'todo' or 'check') if applicable.
     :return: void
     """
     command_arr = command_original.split(' ')
     if command_original == "":
         return
     # Find the closest command
-    closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_original) if a != b) + abs(len(cmd) - len(command_original)))
-    print(f'{Colors.RED}Unknown command: "{command_arr[0]}". Did you mean "{closest_command}"?{Colors.RESET}')
+    if app_name is None:
+        closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_original) if a != b) + abs(len(cmd) - len(command_original)))
+        print(f'{Colors.RED}Unknown command: "{command_arr[0]}". Did you mean "{closest_command}"?{Colors.RESET}')
+    if app_name == 'todo':
+        print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". Did you mean "todo help"?{Colors.RESET}')
+    if app_name == 'check':
+        print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". Did you mean "check help"?{Colors.RESET}')
 
 
 def main():
