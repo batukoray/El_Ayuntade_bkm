@@ -6,14 +6,16 @@ import os
 import json
 import user_data
 import random
+import io
+
+
 
 class Colors:
     """
     This class contains color codes for terminal text formatting.
     """
-    ORANGE = "\033[38;5;208m"
-    RESET = "\033[0m"
-    RED = "\033[31m"
+    RESET = '\033[0m'
+    RED = '\033[31m'
 
 help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType open <App Name> to open the desired application.'
@@ -39,7 +41,7 @@ Type "help" to see the available commands.
 """
 goodbye_text = 'Goodbye! | El Ayuntade By: Batu Koray Masak'
 
-def neon_text(text,randomness=True):
+def neon_text(text,randomness=True,neon_map_num = 0):
     """
 This function takes a text input and returns it with neon colors applied to each character.
     :param text: The text to be colored.
@@ -49,7 +51,7 @@ This function takes a text input and returns it with neon colors applied to each
     if randomness:
         return ''.join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
     else:
-        return ''.join(f"{neon_colors[i % len(neon_colors)]}{char}" for i, char in enumerate(text))
+        return ''.join(f"{neon_colors[(i-neon_map_num) % len(neon_colors)]}{char}" for i, char in enumerate(text))
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
@@ -67,7 +69,7 @@ def analyze_input(text_input):
 
     # If the command is empty, return
     if command_lower == '':
-        clear_last_lines(1)
+        clear_screen()
         return
     # To Do App Commands:
     match command_arr[0]:
@@ -120,6 +122,10 @@ def analyze_input(text_input):
                             print('All items were deleted from the checklist.')
                         else:
                             checklist_delete_function(command_original)
+                    case '-check':
+                        checklist_mark(command_original,check=True)
+                    case '-uncheck':
+                        checklist_mark(command_original,check=False)
                     case _:
                         print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". '
                               f'Did you mean "{min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_lower)
@@ -176,7 +182,7 @@ def clear_last_lines(n):
     """
     This function clears the last n lines in the terminal.
     :param n: The number of lines to clear.
-    :return:
+    :return: void
     """
 
     for _ in range(n):
@@ -185,18 +191,24 @@ def clear_last_lines(n):
         # Clear entire line
         sys.stdout.write('\x1b[2K')
 
-def clear_screen(text = True):
+def clear_screen(text = True,randomness=True,clear_technique='os'):
     """
     This function clears the terminal screen.
     :param text: If True, it will print the main text after clearing the screen.
+    :param randomness: If True, the main text will be colored randomly. If False, it will use a fixed color pattern.
     :return: void
     """
-    if os.name == 'nt':  # For Windows
-        os.system('cls')
-    else:  # For Unix/Linux/Mac
-        os.system('clear')
-    if text:
-        print(f"{neon_text(maintext)}\033[0m")  # Header
+    if clear_technique == 'os':
+        if os.name == 'nt':  # For Windows
+            os.system('cls')
+        else:  # For Unix/Linux/Mac
+            os.system('clear')
+        if text:
+            print(f"{neon_text(maintext,randomness)}\033[0m")  # Header
+    elif clear_technique == 'ascii':
+        clear_last_lines(100)
+        if text:
+            print(f"{neon_text(maintext,randomness)}\033[0m")
 
 
 # TODO App:
@@ -247,6 +259,9 @@ def todo_list_view():
     :return: void
     """
     update_todo_list()
+    if not todo_list:
+        print('Your TODO list is empty.')
+        return
     print('My TODO List Content:')
     for i in range(len(todo_list)):
         print(f'{i+1}: {todo_list[i]}')
@@ -461,9 +476,10 @@ def checklist_list_view():
     update_checklist()
     if checklist_dict:
         print('Checklist Items:')
-        for item, status in checklist_dict.items():
-            status_symbol = '✓' if status else '✗'
-            print(f'{item} {status_symbol}')
+        for i in range(len(checklist_dict)):
+            item = list(checklist_dict.keys())[i]
+            status = '✓' if checklist_dict[item] else '✗'
+            print(f'{i + 1}: {item} -> {status}')
     else:
         print('Your checklist is empty.')
 
@@ -474,6 +490,10 @@ def checklist_add(command_original):
     :return: void
     """
     item = command_original[len('check add '):]
+    # Check if item is fully numerical:
+    if item.isdigit():
+        print(f'{Colors.RED}Error: The item name cannot be a number.{Colors.RESET}')
+        return
     if item and item not in checklist_dict:
         checklist_dict[item] = False  # Default status is unchecked
         checklist_save()
@@ -517,6 +537,34 @@ def checklist_delete_function(command_original):
             print(f'Item "{item}" was deleted from the checklist.')
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
+
+def checklist_mark(command_original,check):
+    """
+    This function marks an item in the checklist as done or not done based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void check -check item
+    """
+    global checklist_dict
+    update_checklist()
+    command_arr = command_original.split(' ')
+    try:
+        index = int(command_arr[2]) - 1
+        item = list(checklist_dict.keys())[index]
+        if check:
+            checklist_dict[item] = True
+            print(f'Item "{item}" was marked as done.')
+        if not check:
+            checklist_dict[item] = False
+            print(f'Item "{item}" was marked as undone.')
+    except ValueError:
+
+        if check:
+            checklist_dict[command_original[13:]] = True
+            print(f'Item "{command_original[13:]}" was marked as done.')
+        else:
+            checklist_dict[command_original[15:]] = False
+            print(f'Item "{command_original[15:]}" was marked as undone.')
+    checklist_save()
 
 # TODO: more functions needed
 
@@ -566,7 +614,16 @@ def main():
     analyze_input(input(neon_text('>>>')))
 
 if __name__ == "__main__":
-    clear_screen(text=True)
+    try:
+        for i in range(12):
+            clear_screen(text=False,randomness=True,clear_technique='ascii')
+            print(neon_text(maintext,randomness=False,neon_map_num=i))
+            time.sleep(0.05)
+        clear_screen(text=True,randomness=False)
+    except:
+        clear_screen(text=False)
+        print(neon_text(goodbye_text))
+        sys.exit(0)
     while True:
         try:
             main()
