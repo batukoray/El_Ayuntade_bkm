@@ -169,7 +169,7 @@ def analyze_input(text_input):
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case 'animate' | 'animation' | 'anim':
-            animate_logo(25)
+            animate_logo(25,arrows=True)
         case _:
             unknown_command(command_original)
 
@@ -622,7 +622,7 @@ def open_function(command_original):
     else:
         print(f'Opened "{app_name.capitalize()}".')
 
-def animate_logo(n=12):
+def animate_logo(n=12,arrows=False):
     """
     This function animates the logo by printing it with different neon colors.
     :param n: The number of iterations for the animation.
@@ -631,7 +631,10 @@ def animate_logo(n=12):
     try:
         for j in range(n):
             clear_screen(text=False,randomness=True,clear_technique='ascii')
-            print(neon_text(maintext,randomness=False,neon_map_num=j))
+            if arrows:
+                print(neon_text(f'{maintext}\n>>>',randomness=False,neon_map_num=j),end='')
+            else:
+                print(neon_text(maintext,randomness=False,neon_map_num=j))
             time.sleep(0.05)
         clear_screen(text=True,randomness=False)
     except:
@@ -685,6 +688,7 @@ if __name__ == "__main__":
         clear_screen(text=False)
         print(neon_text(goodbye_text))
         sys.exit(0)
+
     while True:
         try:
             main()
