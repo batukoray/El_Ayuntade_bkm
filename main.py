@@ -7,6 +7,7 @@ import json
 import user_data
 import random
 import io
+from simpleeval import simple_eval
 
 class Colors:
     """
@@ -68,7 +69,7 @@ def analyze_input(text_input):
 
     # If the command is empty, return
     if command_lower == '':
-        clear_screen()
+        clear_last_lines(1)
         return
     # To Do App Commands:
     match command_arr[0]:
@@ -156,12 +157,13 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: The "clear" command does not take any arguments.{Colors.RESET}')
         case 'eval':
             if len(command_arr) > 1:
+                expr = command_original[len('eval '):].strip()
+                expr = expr.replace('^','**')
+                NAMES = {'pi':math.pi,'e':math.e}
                 try:
-                    result = eval(command_lower[5:].replace('pi', str(math.pi))
-                                  .replace('e', str(math.e))
-                                  .replace('^', '**'))
-                    if isinstance(result, (int, float)):
-                        print(f"{result:,}")
+                    result = simple_eval(expr,names=NAMES)
+                    if isinstance(result,(int, float)):
+                        print(f'{result:,}')
                     else:
                         print(result)
                 except Exception:
@@ -169,7 +171,7 @@ def analyze_input(text_input):
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case 'animate' | 'animation' | 'anim':
-            animate_logo(25,arrows=True)
+            animate_logo(40,arrows=True)
         case _:
             unknown_command(command_original)
 
