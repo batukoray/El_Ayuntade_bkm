@@ -55,7 +55,7 @@ This function takes a text input and returns it with neon colors applied to each
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
-            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help', 'check -check', 'check -uncheck', 'animate', 'animation', 'anim']
+            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help', 'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!']
 
 def analyze_input(text_input):
     """
