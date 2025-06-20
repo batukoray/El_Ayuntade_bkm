@@ -17,6 +17,7 @@ class Colors:
     RED = '\033[31m'
 
 help_content = ('Type "todo help" to see the commands for the TODO app.'
+              '\nType "check help" to see the commands for the Checklist app.'
               '\nType open <App Name> to open the desired application.'
               '\nType "exit" to exit the program.'
               '\nType "chat" to access the LLM.'
@@ -69,7 +70,7 @@ def analyze_input(text_input):
 
     # If the command is empty, return
     if command_lower == '':
-        clear_last_lines(1)
+        clear_screen(text=False)
         return
     # To Do App Commands:
     match command_arr[0]:
@@ -152,7 +153,7 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: The "exit" command does not take any arguments.{Colors.RESET}')
         case 'clear' | 'clr':
             if len(command_arr) == 1:
-                clear_screen()
+                clear_screen(text=False)
             else:
                 print(f'{Colors.RED}Error: The "clear" command does not take any arguments.{Colors.RESET}')
         case 'eval':
@@ -219,7 +220,7 @@ def update_todo_list():
     """
     global todo_list
     if os.path.exists(user_data.TODO_FILE_LOC):
-        with open(user_data.TODO_FILE_LOC, "r", encoding="utf-16") as f:
+        with open(user_data.TODO_FILE_LOC, "r", encoding="utf-8") as f:
             try:
                 todo_list = json.load(f)
             except json.JSONDecodeError:
@@ -234,7 +235,7 @@ def todo_save():
     This function saves the current TODO list to a file in JSON format.
     :return: void
     """
-    with open(user_data.TODO_FILE_LOC, "w", encoding="utf-16") as f:
+    with open(user_data.TODO_FILE_LOC, "w", encoding="utf-8") as f:
         json.dump(todo_list, f, ensure_ascii=False, indent=2)
 
 def todo_help():
@@ -463,7 +464,7 @@ def update_checklist():
     """
     global checklist_dict
     if os.path.exists(user_data.CHECKLIST_FILE_LOC):
-        with open(user_data.CHECKLIST_FILE_LOC, "r", encoding="utf-16") as f:
+        with open(user_data.CHECKLIST_FILE_LOC, "r", encoding="utf-8") as f:
             try:
                 checklist_dict = json.load(f)
             except json.JSONDecodeError:
@@ -478,7 +479,7 @@ def checklist_save():
     This function saves the current checklist items to a file in JSON format.
     :return: void
     """
-    with open(user_data.CHECKLIST_FILE_LOC, "w", encoding="utf-16") as f:
+    with open(user_data.CHECKLIST_FILE_LOC, "w", encoding="utf-8") as f:
         json.dump(checklist_dict, f, ensure_ascii=False, indent=2)
 
 def checklist_help():
@@ -488,11 +489,19 @@ def checklist_help():
     """
     print('Type "check ls" to view the checklist items.'
           '\nType "check add <new item>" to add a new item to the checklist.'
-          '\nType "check rm <item>" to remove an item from the checklist.'
+          '\nType "check add <item1; item2; item3>" to add multiple items to the checklist.'
+          '\nType "check rm <item>" to remove an item from the checklist by its name.'
+          '\nType "check rm <item_index>" to remove the referred item from the checklist.'
+          '\nType "check rm -checked" to remove all checked items from the checklist.'
+          '\nType "check rm -unchecked" to remove all unchecked items from the checklist.'
           '\nType "check rm all" to remove all items from the checklist.'
           '\nType "check help" to see this help message again.'
           '\nType "check -check <item_name or index_of_item>" to mark an item as done.'
-          '\nType "check -uncheck <item_name or index_of_item>" to mark an item as undone.')
+          '\nType "check -check <item indexes seperated with commas>" to mark multiple items as done.'
+          '\nType "check -check all" to mark all items as done.'
+          '\nType "check -uncheck <item_name or index_of_item>" to mark an item as undone.'
+          '\nType "check -uncheck <item indexes seperated with commas>" to mark multiple items as undone.'
+          '\nType "check -uncheck all" to mark all items as undone.')
 
 def checklist_list_view():
     """
@@ -521,7 +530,21 @@ def checklist_add(command_original):
     if item.isdigit():
         print(f'{Colors.RED}Error: The item name cannot be a number.{Colors.RESET}')
         return
-    if item and item not in checklist_dict:
+    elif ';' in item:
+        item_arr = item.split(';')
+        successful = True
+        for i in item_arr:
+            if i.strip() not in checklist_dict and i.strip() != '':
+                checklist_dict[i.strip()] = False
+            if i.strip() == '':
+                print(f"{Colors.RED}Error: You need to provide a name for the checklist item.{Colors.RESET}")
+                successful = False
+        checklist_save()
+        if successful:
+            print(f'Added new checklist items: {", ".join(item_arr)}')
+
+        checklist_save()
+    elif item and item not in checklist_dict:
         checklist_dict[item] = False  # Default status is unchecked
         checklist_save()
         print(f'Added new checklist item: {item}')
@@ -543,15 +566,27 @@ def checklist_delete_function(command_original):
         print('Your checklist is empty.')
         return
 
-    if command_lower != 'check rm':
+    if command_lower != 'check rm' and command_lower != 'check rm -checked' and command_lower != 'check rm -unchecked':
         item = command_original[len('check rm '):]
         if item in checklist_dict:
             del checklist_dict[item]
             checklist_save()
             print(f'Item "{item}" was deleted from the checklist.')
+        elif item.isdigit():
+            try:
+                index = int(item) - 1
+                if 0 <= index < len(checklist_dict):
+                    item_to_delete = list(checklist_dict.keys())[index]
+                    del checklist_dict[item_to_delete]
+                    checklist_save()
+                    print(f'Item "{item_to_delete}" was deleted from the checklist.')
+                else:
+                    print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+            except ValueError:
+                print(f'{Colors.RED}Error: Invalid index format.{Colors.RESET}')
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
-    else:
+    elif command_lower == 'check rm':
         checklist_list_view()
         item = input('Type the name of the item you want to delete, or the index of the item you want to delete, or "all" to delete all items: ')
         if item.lower() == 'all':
@@ -576,6 +611,24 @@ def checklist_delete_function(command_original):
                 print(f'{Colors.RED}Error: Invalid index format.{Colors.RESET}')
         else:
             print(f'{Colors.RED}Error: The item "{item}" was not found in the checklist.{Colors.RESET}')
+    elif command_lower == 'check rm -checked':
+        items_to_remove = [item for item, checked in checklist_dict.items() if checked]
+        if items_to_remove:
+            for item in items_to_remove:
+                del checklist_dict[item]
+            checklist_save()
+            print(f'Removed {len(items_to_remove)} checked items from the checklist.')
+        else:
+            print('No checked items to remove.')
+    elif command_lower == 'check rm -unchecked':
+        items_to_remove = [item for item, checked in checklist_dict.items() if not checked]
+        if items_to_remove:
+            for item in items_to_remove:
+                del checklist_dict[item]
+            checklist_save()
+            print(f'Removed {len(items_to_remove)} unchecked items from the checklist.')
+        else:
+            print('No unchecked items to remove.')
 
 def checklist_mark(command_original,check:bool):
     """
@@ -587,23 +640,44 @@ def checklist_mark(command_original,check:bool):
     global checklist_dict
     update_checklist()
     command_arr = command_original.split(' ')
-    try:
-        index = int(command_arr[2]) - 1
-        item = list(checklist_dict.keys())[index]
-        if check:
-            checklist_dict[item] = True
-            print(f'Item "{item}" was marked as done.')
-        if not check:
-            checklist_dict[item] = False
-            print(f'Item "{item}" was marked as undone.')
-    except ValueError:
-
-        if check:
-            checklist_dict[command_original[13:]] = True
-            print(f'Item "{command_original[13:]}" was marked as done.')
+    item = command_original[len('check -check '):] if check else command_original[len('check -uncheck '):]
+    if item.lower() == 'all':
+        for key in checklist_dict.keys():
+            checklist_dict[key] = check
+        checklist_save()
+        print(f'All items marked as {"done" if check else "not done"}.')
+        return
+    if ',' in item:
+        items = item.split(',')
+        for i in items:
+            i = i.strip()
+            if i.isdigit():
+                index = int(i) - 1
+                if 0 <= index < len(checklist_dict):
+                    item_name = list(checklist_dict.keys())[index]
+                    checklist_dict[item_name] = check
+                    print(f'Marked item "{item_name}" as {"done" if check else "not done"}.')
+                else:
+                    print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+            elif i in checklist_dict:
+                checklist_dict[i] = check
+                print(f'Marked item "{i}" as {"done" if check else "not done"}.')
+            else:
+                print(f'{Colors.RED}Error: Item "{i}" not found in the checklist.{Colors.RESET}')
+    elif item.isdigit():
+        index = int(item) - 1
+        if 0 <= index < len(checklist_dict):
+            item_name = list(checklist_dict.keys())[index]
+            checklist_dict[item_name] = check
+            print(f'Marked item "{item_name}" as {"done" if check else "not done"}.')
         else:
-            checklist_dict[command_original[15:]] = False
-            print(f'Item "{command_original[15:]}" was marked as undone.')
+            print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+    else:
+        if item in checklist_dict:
+            checklist_dict[item] = check
+            print(f'Marked item "{item}" as {"done" if check else "not done"}.')
+        else:
+            print(f'{Colors.RED}Error: Item "{item}" not found in the checklist.{Colors.RESET}')
     checklist_save()
 
 # TODO: more functions needed
@@ -628,6 +702,7 @@ def animate_logo(n=12,arrows=False):
     """
     This function animates the logo by printing it with different neon colors.
     :param n: The number of iterations for the animation.
+    :param arrows: If True, it will print arrows after the main text.
     :return: void
     """
     try:
@@ -639,7 +714,7 @@ def animate_logo(n=12,arrows=False):
                 print(neon_text(maintext,randomness=False,neon_map_num=j))
             time.sleep(0.05)
         clear_screen(text=True,randomness=False)
-    except:
+    except KeyboardInterrupt:
         clear_screen(text=False)
         print(neon_text(goodbye_text))
         sys.exit(0)
@@ -686,7 +761,7 @@ if __name__ == "__main__":
             print(neon_text(maintext,randomness=False,neon_map_num=i))
             time.sleep(0.05)
         clear_screen(text=True,randomness=False)
-    except:
+    except KeyboardInterrupt:
         clear_screen(text=False)
         print(neon_text(goodbye_text))
         sys.exit(0)
