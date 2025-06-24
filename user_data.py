@@ -1,6 +1,6 @@
 import os
 
-username = 'Batu Koray Masak'
+username = 'Batu Koray Masak' # Change this to your name.
 # find the project location.
 PROJECT_LOCATION = os.path.dirname(os.path.abspath(__file__))
 TODO_FILE_LOC = f'{PROJECT_LOCATION}/user_datas/todos.json'

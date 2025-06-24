@@ -9,6 +9,9 @@ import random
 import io
 from simpleeval import simple_eval
 import pywhatkit as kit
+from gtts import gTTS
+from wikipedia import languages
+
 
 class Colors:
     """
@@ -23,6 +26,7 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "exit" to exit the program.'
               '\nType "chat" to access the LLM.'
               '\nType eval <expression> to evaluate a mathematical expression.'
+              '\nType "tts <text>" to convert text to speech.'
               '\nType "clear" or "clr" to clear the screen.'
               '\nType "help" to see this help message again.'
               '\nType "quit" to exit the program.')
@@ -147,6 +151,8 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: The "chat" command does not take any arguments.{Colors.RESET}') # TODO: Maybe it will take arguments in the future.
         case 'send':
             send_whatsapp_function(command_original)
+        case 'tts':
+            text_to_speech_function(command_original)
         case 'exit' | 'quit':
             if len(command_arr) == 1:
                 clear_screen(text=False)
@@ -741,6 +747,30 @@ def send_whatsapp_function(command_original:str):
     print(reciever)
     if timeless:
         kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
+
+def text_to_speech_function(command_original:str):
+    """
+    This function converts text to speech using gTTS and plays it.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    text= command_original[len('tts '):]
+    tts = gTTS(text=text, lang='en')
+    tts.save('speech.mp3')
+    try:
+        if os.name == 'nt':  # For Windows
+            os.system('start -q speech.mp3')
+        else:  # For Unix/Linux/Mac
+            os.system('mpg123 -q speech.mp3')
+    except FileNotFoundError:
+        print(f'{Colors.RED}Error: Could not find the audio player. Please install mpg123 or use a different audio player.{Colors.RESET}')
+    else:
+        print(f'Played audio for: "{neon_text(text)}"')
+    # Clean up the audio file after playing
+    if os.path.exists('speech.mp3'):
+        os.remove('speech.mp3')
+
+
 
 
 
