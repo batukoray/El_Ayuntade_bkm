@@ -1,0 +1,34 @@
+# El Ayuntade - Personal Productivity CLI Tool
+# Python Requirements File
+# Author: Batu Koray Masak
+# 
+# Python Version Requirement
+# =========================
+# python>=3.8,<4.0
+
+# Core Dependencies
+# =================
+
+# Mathematical expression evaluation
+simpleeval==1.0.3
+
+# WhatsApp automation and messaging
+pywhatkit==5.4
+
+# Standard Library Modules Used:
+# - subprocess (built-in)
+# - time (built-in) 
+# - sys (built-in)
+# - math (built-in)
+# - os (built-in)
+# - json (built-in)
+# - random (built-in)
+# - io (built-in)
+
+# Development Dependencies (optional)
+# ==================================
+# Uncomment the following for development work:
+# pytest>=7.0.0          # Testing framework
+# black>=22.0.0           # Code formatter
+# flake8>=4.0.0           # Code linter
+# mypy>=0.950             # Type checker
