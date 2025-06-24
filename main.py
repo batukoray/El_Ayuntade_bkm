@@ -8,6 +8,7 @@ import user_data
 import random
 import io
 from simpleeval import simple_eval
+import pywhatkit as kit
 
 class Colors:
     """
@@ -70,7 +71,7 @@ def analyze_input(text_input):
 
     # If the command is empty, return
     if command_lower == '':
-        clear_screen(text=False)
+        clear_screen(text=True,randomness=True,clear_technique='ascii')
         return
     # To Do App Commands:
     match command_arr[0]:
@@ -144,6 +145,8 @@ def analyze_input(text_input):
                 chat_function()
             else:
                 print(f'{Colors.RED}Error: The "chat" command does not take any arguments.{Colors.RESET}') # TODO: Maybe it will take arguments in the future.
+        case 'send':
+            send_whatsapp_function(command_original)
         case 'exit' | 'quit':
             if len(command_arr) == 1:
                 clear_screen(text=False)
@@ -153,16 +156,16 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: The "exit" command does not take any arguments.{Colors.RESET}')
         case 'clear' | 'clr':
             if len(command_arr) == 1:
-                clear_screen(text=False)
+                clear_screen(text=True,randomness=True,clear_technique='os')
             else:
                 print(f'{Colors.RED}Error: The "clear" command does not take any arguments.{Colors.RESET}')
         case 'eval':
             if len(command_arr) > 1:
                 expr = command_original[len('eval '):].strip()
                 expr = expr.replace('^','**')
-                NAMES = {'pi':math.pi,'e':math.e}
+                names = {'pi':math.pi,'e':math.e}
                 try:
-                    result = simple_eval(expr,names=NAMES)
+                    result = simple_eval(expr,names=names)
                     if isinstance(result,(int, float)):
                         print(f'{result:,}')
                     else:
@@ -208,6 +211,8 @@ def clear_screen(text = True,randomness=True,clear_technique='os'):
         clear_last_lines(100)
         if text:
             print(f"{neon_text(maintext,randomness)}\033[0m")
+    else:
+        raise Exception(f'The clear technique "{clear_technique}" is not supported.')
 
 
 # TODO App:
@@ -533,10 +538,10 @@ def checklist_add(command_original):
     elif ';' in item:
         item_arr = item.split(';')
         successful = True
-        for i in item_arr:
-            if i.strip() not in checklist_dict and i.strip() != '':
-                checklist_dict[i.strip()] = False
-            if i.strip() == '':
+        for j in item_arr:
+            if j.strip() not in checklist_dict and j.strip() != '':
+                checklist_dict[j.strip()] = False
+            if j.strip() == '':
                 print(f"{Colors.RED}Error: You need to provide a name for the checklist item.{Colors.RESET}")
                 successful = False
         checklist_save()
@@ -639,7 +644,6 @@ def checklist_mark(command_original,check:bool):
     """
     global checklist_dict
     update_checklist()
-    command_arr = command_original.split(' ')
     item = command_original[len('check -check '):] if check else command_original[len('check -uncheck '):]
     if item.lower() == 'all':
         for key in checklist_dict.keys():
@@ -649,21 +653,21 @@ def checklist_mark(command_original,check:bool):
         return
     if ',' in item:
         items = item.split(',')
-        for i in items:
-            i = i.strip()
-            if i.isdigit():
-                index = int(i) - 1
+        for j in items:
+            j = j.strip()
+            if j.isdigit():
+                index = int(j) - 1
                 if 0 <= index < len(checklist_dict):
                     item_name = list(checklist_dict.keys())[index]
                     checklist_dict[item_name] = check
                     print(f'Marked item "{item_name}" as {"done" if check else "not done"}.')
                 else:
                     print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
-            elif i in checklist_dict:
-                checklist_dict[i] = check
-                print(f'Marked item "{i}" as {"done" if check else "not done"}.')
+            elif j in checklist_dict:
+                checklist_dict[j] = check
+                print(f'Marked item "{j}" as {"done" if check else "not done"}.')
             else:
-                print(f'{Colors.RED}Error: Item "{i}" not found in the checklist.{Colors.RESET}')
+                print(f'{Colors.RED}Error: Item "{j}" not found in the checklist.{Colors.RESET}')
     elif item.isdigit():
         index = int(item) - 1
         if 0 <= index < len(checklist_dict):
@@ -726,6 +730,20 @@ def chat_function():
     :return: void
     """
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
+
+def send_whatsapp_function(command_original:str):
+    message = command_original.split("'")[1].strip()
+    reciever = command_original.split('to')[1].split('at')[0].strip()
+    timeless = True
+    if 'at' in command_original:
+        timeless = False
+        time = command_original.split('at')[1].strip()
+    print(reciever)
+    if timeless:
+        kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
+
+
+
 
 def unknown_command(command_original, app_name=None):
     """
