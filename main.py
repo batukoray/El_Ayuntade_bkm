@@ -13,6 +13,7 @@ from gtts import gTTS
 from wikipedia import languages
 from googletrans import Translator
 import asyncio
+import Levenshtein
 
 
 class Colors:
@@ -92,9 +93,12 @@ def analyze_input(text_input):
                         todo_list_view()
                     case 'rm':
                         if len(command_arr) == 3 and command_arr[2] == 'all':
-                            todo_list.clear()
-                            todo_save()
-                            print('All items were deleted.')
+                            if not todo_list:
+                                print('Your TODO list is already empty.')
+                            else:
+                                todo_list.clear()
+                                todo_save()
+                                print('All items were deleted.')
                         else:
                             todo_delete_function(command_original)
 
@@ -124,9 +128,12 @@ def analyze_input(text_input):
                         checklist_add(command_original)
                     case 'rm':
                         if len(command_arr) == 3 and command_arr[2] == 'all':
-                            checklist_dict.clear()
-                            checklist_save()
-                            print('All items were deleted from the checklist.')
+                            if not checklist_dict:
+                                print('Your checklist is already empty.')
+                            else:
+                                checklist_dict.clear()
+                                checklist_save()
+                                print('All items were deleted from the checklist.')
                         else:
                             checklist_delete_function(command_original)
                     case '-check':
@@ -810,25 +817,61 @@ def translate_function(command_original: str):
     except Exception as e:
         print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
 
+def levenshtein(s: str, t: str) -> int:
+    """Compute the Levenshtein edit distance between strings s and t."""
+    if s == t:
+        return 0
+    if len(s) == 0:
+        return len(t)
+    if len(t) == 0:
+        return len(s)
+
+    rows = len(s) + 1
+    cols = len(t) + 1
+    dist = [[0] * cols for _ in range(rows)]
+    for i in range(rows):
+        dist[i][0] = i
+    for j in range(cols):
+        dist[0][j] = j
+
+    for i in range(1, rows):
+        for j in range(1, cols):
+            cost = 0 if s[i-1] == t[j-1] else 1
+            dist[i][j] = min(
+                dist[i-1][j] + 1,      # deletion
+                dist[i][j-1] + 1,      # insertion
+                dist[i-1][j-1] + cost  # substitution
+            )
+    return dist[-1][-1]
+
+
 def unknown_command(command_original, app_name=None):
     """
-    This function handles unknown commands by suggesting the closest command from the predefined list.
-    :param command_original: The original command input by the user without multiple whitespaces.
-    :param app_name: The name of the application (e.g., 'todo' or 'check') if applicable.
-    :return: void
+    This function handles unknown commands by suggesting the closest command
+    from the predefined list, using Levenshtein distance.
     """
-    command_arr = command_original.split(' ')
-    if command_original == "":
+    parts = command_original.strip().split()
+    if not parts:
         return
-    # Find the closest command
-    if app_name is None:
-        closest_command = min(commands, key=lambda cmd: sum(1 for a, b in zip(cmd, command_original) if a != b) + abs(len(cmd) - len(command_original)))
-        print(f'{Colors.RED}Unknown command: "{command_arr[0]}". Did you mean "{closest_command}"?{Colors.RESET}')
-    if app_name == 'todo':
-        print(f'{Colors.RED}Unknown TODO command: "{command_arr[1]}". Did you mean "todo help"?{Colors.RESET}')
-    if app_name == 'check':
-        print(f'{Colors.RED}Unknown checklist command: "{command_arr[1]}". Did you mean "check help"?{Colors.RESET}')
 
+    if app_name is None:
+        # Compare full commands
+        closest = min(commands, key=lambda cmd: levenshtein(command_original, cmd))
+        print(f'{Colors.RED}Unknown command: "{parts[0]}". Did you mean "{closest}"?{Colors.RESET}')
+
+    elif app_name == 'todo':
+        # Suggest a todo subcommand
+        pool = [c.split(' ', 1)[1] for c in commands if c.startswith('todo ')]
+        target = parts[1] if len(parts) > 1 else ''
+        closest = min(pool, key=lambda sub: levenshtein(target, sub))
+        print(f'{Colors.RED}Unknown TODO command: "{target}". Did you mean "todo {closest}"?{Colors.RESET}')
+
+    elif app_name == 'check':
+        # Suggest a checklist subcommand
+        pool = [c.split(' ', 1)[1] for c in commands if c.startswith('check ')]
+        target = parts[1] if len(parts) > 1 else ''
+        closest = min(pool, key=lambda sub: levenshtein(target, sub))
+        print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}')
 
 def main():
     """
