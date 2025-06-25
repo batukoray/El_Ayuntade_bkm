@@ -11,6 +11,8 @@ from simpleeval import simple_eval
 import pywhatkit as kit
 from gtts import gTTS
 from wikipedia import languages
+from googletrans import Translator
+import asyncio
 
 
 class Colors:
@@ -27,6 +29,8 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "chat" to access the LLM.'
               '\nType eval <expression> to evaluate a mathematical expression.'
               '\nType "tts <text>" to convert text to speech.'
+              '\nType "tr <text> -> <language>" to translate text to a specified language.'
+              '\nType "tr <text>" to translate text to English.'
               '\nType "clear" or "clr" to clear the screen.'
               '\nType "help" to see this help message again.'
               '\nType "quit" to exit the program.')
@@ -153,6 +157,8 @@ def analyze_input(text_input):
             send_whatsapp_function(command_original)
         case 'tts':
             text_to_speech_function(command_original)
+        case 'tr':
+            translate_function(command_original)
         case 'exit' | 'quit':
             if len(command_arr) == 1:
                 clear_screen(text=False)
@@ -770,10 +776,39 @@ def text_to_speech_function(command_original:str):
     if os.path.exists('speech.mp3'):
         os.remove('speech.mp3')
 
+def translate_function(command_original: str):
+    """
+    This function translates text to a specified language using Google Translate.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    # Strip off the "tr " prefix
+    cmd = command_original[len('tr '):].strip()
+
+    # Ensure the user typed "text -> lang"
+    text = cmd.split('->')[0].strip()
+    if '->' not in cmd:
+        try:
+            async def _do_translate(t, lang):
+                tr = Translator()
+                return await tr.translate(t, dest=lang)
 
 
+            result = asyncio.run(_do_translate(text, 'en'))
+            print(result.text)
+        except Exception as e:
+            print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
+        return
 
-
+    text, language = map(str.strip, cmd.split('->', 1))
+    try:
+        async def _do_translate(t, lang):
+            tr = Translator()
+            return await tr.translate(t, dest=lang)
+        result = asyncio.run(_do_translate(text, language))
+        print(result.text)
+    except Exception as e:
+        print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
 
 def unknown_command(command_original, app_name=None):
     """
