@@ -15,6 +15,18 @@ simpleeval==1.0.3
 # WhatsApp automation and messaging
 pywhatkit==5.4
 
+# Text-to-speech functionality
+gTTS>=2.3.0
+
+# Wikipedia integration
+wikipedia>=1.4.0
+
+# Google Translate functionality
+googletrans>=4.0.0
+
+# String similarity and distance calculations
+Levenshtein>=0.20.0
+
 # Standard Library Modules Used:
 # - subprocess (built-in)
 # - time (built-in) 
@@ -24,6 +36,7 @@ pywhatkit==5.4
 # - json (built-in)
 # - random (built-in)
 # - io (built-in)
+# - asyncio (built-in)
 
 # Development Dependencies (optional)
 # ==================================
