@@ -7,6 +7,8 @@ import json
 import user_data
 import random
 import io
+
+from PIL.SpiderImagePlugin import iforms
 from simpleeval import simple_eval
 import pywhatkit as kit
 from gtts import gTTS
@@ -14,6 +16,7 @@ from wikipedia import languages
 from googletrans import Translator
 import asyncio
 import Levenshtein
+import pyautogui
 
 
 class Colors:
@@ -32,6 +35,9 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "tts <text>" to convert text to speech.'
               '\nType "tr <text> -> <language>" to translate text to a specified language.'
               '\nType "tr <text>" to translate text to English.'
+              '\nType "send <phone_number> <message>" to send a WhatsApp message.'
+              '\nType "settings help" to see the commands for the Settings app.'
+              '\nType "animate" or "animation" or "anim" to see the animated logo.'
               '\nType "clear" or "clr" to clear the screen.'
               '\nType "help" to see this help message again.'
               '\nType "quit" to exit the program.')
@@ -145,6 +151,27 @@ def analyze_input(text_input):
 
             else:
                 checklist_help()
+        case 'notes':
+            if len(command_arr) >= 2:
+                match command_arr[1]:
+                    case 'add':
+                        notes_add(command_original)
+            # TODO: Complete the notes app asap.
+
+        case 'settings':
+            if len(command_arr) >= 2:
+                match command_arr[1]:
+                    case 'edit':
+                        settings_edit(command_original)
+                    case 'help':
+                        settings_help()
+                    case 'ls':
+                        settings_list_view()
+                    case 'add':
+                        settings_edit(command_original)
+            else:
+                settings_help()
+
         case 'open':
             if len(command_arr) > 1:
                 open_function(command_original)
@@ -152,6 +179,8 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: You need to specify an application to open.{Colors.RESET}')
         case 'help':
             if len(command_arr) == 1:
+
+
                 print(help_content)
             else:
                 print(f'{Colors.RED}Error: The "help" command does not take any arguments.{Colors.RESET}')
@@ -539,7 +568,7 @@ def checklist_list_view():
         for j in range(len(checklist_dict)):
             item = list(checklist_dict.keys())[j]
             status = '✓' if checklist_dict[item] else '✗'
-            print(f'{j + 1}: {item} -> {status}')
+            print(f'{j + 1}: {item} -> {neon_text(status,randomness=True)}')
     else:
         print('Your checklist is empty.')
 
@@ -707,6 +736,101 @@ def checklist_mark(command_original,check:bool):
 
 # Checklist app end
 
+# Notes app start
+
+def notes_add(command_original):
+    """
+    This function adds a new note to the notes file.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    note = command_original[len('notes add '):]
+    if note.strip() == '':
+        print(f'{Colors.RED}Error: You need to provide a name for the note.{Colors.RESET}')
+        return
+    with open(user_data.NOTES_FILE_LOC, 'a', encoding='utf-8') as f:
+        f.write(f'{note}\n')
+    print(f'Added new note: {note}')
+
+# Notes app end
+
+# Setting functions start
+
+settings_dict = {'openappstayontab': False}  # Default setting
+settings_names = ['openappstayontab']
+
+def update_settings():
+    """
+    This function updates the settings by reading from a JSON file.
+    :return: void
+    """
+    global settings_dict
+    if os.path.exists(user_data.SETTINGS_FILE_LOC):
+        with open(user_data.SETTINGS_FILE_LOC, "r", encoding="utf-8") as f:
+            try:
+                settings_dict = json.load(f)
+            except json.JSONDecodeError:
+                settings_dict = {}
+    else:
+        settings_dict = {}
+
+update_settings()
+
+def settings_save():
+    """
+    This function saves the current settings to a file in JSON format.
+    :return: void
+    """
+    with open(user_data.SETTINGS_FILE_LOC, "w", encoding="utf-8") as f:
+        json.dump(settings_dict, f, ensure_ascii=False, indent=2)
+
+def settings_help():
+    """
+    This function displays the help content for the settings app.
+    :return: void
+    """
+    print('Type "settings edit <setting_name> <new_value_of_setting>" to add a new setting.'
+          '\nType "settings help" to see this help message again.'
+          '\nType "settings ls" to list all settings.'
+          '\nType "settings rm <setting_name>" to remove a setting.'
+          '\nType "settings rm all" to remove all settings.'
+          '\nSetting names: ' + ', '.join(settings_names))
+
+def settings_list_view():
+    """
+    This function prints the settings in the settings file.
+    :return: void
+    """
+    update_settings()
+    if settings_dict:
+        print('Settings:')
+        for key, value in settings_dict.items():
+            print(f'{key}: {value}')
+    else:
+        print('Your settings are empty.')
+
+def settings_edit(command_original):
+    """
+    This function adds a new setting to the settings file.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    setting = command_original[len('settings edit '):].lower()
+    if setting.strip() == '':
+        print(f'{Colors.RED}Error: You need to provide the name of the setting.{Colors.RESET}')
+        return
+    setting_name = setting.split(' ')[0].strip()
+    try:
+        setting_value = False if setting.split(' ')[1].strip() == 'false' else True
+    except IndexError:
+        print(f'{Colors.RED}Error: You need to provide a value for the setting.{Colors.RESET}')
+        return
+    except ValueError:
+        setting_value = int(setting.split(' ')[1].strip())
+    settings_dict[setting_name] = setting_value
+    settings_save()
+    print(f'Edited setting: {setting_name} with value {setting_value}')
+
 def open_function(command_original):
     """
     This is a function to open applications on the system.
@@ -716,6 +840,14 @@ def open_function(command_original):
     app_name = command_original[5:]
     try:
         subprocess.run(['open', '-a', app_name], check=True)
+        update_settings()
+        if settings_dict.get('openappstayontab', False):
+            current_mouse_loc_x = pyautogui.position().x
+            current_mouse_loc_y = pyautogui.position().y
+            width, height = pyautogui.size()
+            pyautogui.click(x=width / 2, y=height / 2)
+            pyautogui.moveTo(x=current_mouse_loc_x, y=current_mouse_loc_y)
+
     except subprocess.CalledProcessError:
         time.sleep(0.1)
     else:
