@@ -845,6 +845,7 @@ def open_function(command_original):
             current_mouse_loc_x = pyautogui.position().x
             current_mouse_loc_y = pyautogui.position().y
             width, height = pyautogui.size()
+            time.sleep(0.5)
             pyautogui.click(x=width / 2, y=height / 2)
             pyautogui.moveTo(x=current_mouse_loc_x, y=current_mouse_loc_y)
 
