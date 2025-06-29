@@ -32,9 +32,8 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "exit" to exit the program.'
               '\nType "chat" to access the LLM.'
               '\nType eval <expression> to evaluate a mathematical expression.'
-              '\nType "tts <text>" to convert text to speech.'
-              '\nType "tr <text> -> <language>" to translate text to a specified language.'
-              '\nType "tr <text>" to translate text to English.'
+              '\nType "tts help" to see the commands for the Text-to-Speech app.'
+              '\nType "tr help" to see the commands for the Translation app.'
               '\nType "send <phone_number> <message>" to send a WhatsApp message.'
               '\nType "settings help" to see the commands for the Settings app.'
               '\nType "animate" or "animation" or "anim" to see the animated logo.'
@@ -61,8 +60,8 @@ def neon_text(text,randomness=True,neon_map_num = 0):
     """
 This function takes a text input and returns it with neon colors applied to each character.
     :param text: The text to be colored.
-    :param randomness: If True, each character will be colored randomly from the neon_colors list.
-    :param neon_map_num: An integer used to map the colors in a specific order.
+    :param randomness: If True, each character will be colored randomly from the neon_colors list. It is true in default.
+    :param neon_map_num: An integer used to map the colors in a specific order. Is 0 in default. Only effective if randomness is False.
     :return: A string with neon colors applied to each character.
     """
     if randomness:
@@ -72,7 +71,9 @@ This function takes a text input and returns it with neon colors applied to each
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
-            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help', 'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!']
+            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help',
+            'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!',
+            'tts','tr','send','settings','settings edit','settings help','settings ls','settings add','settings backtodefaults']
 
 def analyze_input(text_input):
     """
@@ -142,6 +143,8 @@ def analyze_input(text_input):
                                 print('All items were deleted from the checklist.')
                         else:
                             checklist_delete_function(command_original)
+                    case 'changeorder':
+                        checklist_changeorder(command_original)
                     case '-check':
                         checklist_mark(command_original,check=True)
                     case '-uncheck':
@@ -169,6 +172,18 @@ def analyze_input(text_input):
                         settings_list_view()
                     case 'add':
                         settings_edit(command_original)
+                    case 'backtodefaults':
+                        userinput = input('Are you sure you want to reset the settings to defaults? (y/n): ')
+                        if userinput.lower() == 'y':
+                            global settings_dict
+                            settings_dict = settings_defaults.copy()
+                            settings_save()
+                            print('Settings have been reset to defaults.')
+                        else:
+                            print('Settings were not reset to defaults.')
+                        del userinput
+                    case _:
+                        unknown_command(command_original,app_name='settings')
             else:
                 settings_help()
 
@@ -227,7 +242,7 @@ def analyze_input(text_input):
         case _:
             unknown_command(command_original)
 
-def clear_last_lines(n):
+def clear_last_lines(n:int):
     """
     This function clears the last n lines in the terminal.
     :param n: The number of lines to clear.
@@ -243,9 +258,9 @@ def clear_last_lines(n):
 def clear_screen(text = True,randomness=True,clear_technique='os'):
     """
     This function clears the terminal screen.
-    :param text: If True, it will print the main text after clearing the screen.
-    :param randomness: If True, the main text will be colored randomly. If False, it will use a fixed color pattern.
-    :param clear_technique: The technique to clear the screen. 'os' for using os.system, 'ascii' for using ANSI escape codes.
+    :param text: If True, it will print the main text after clearing the screen. If False, it will not print the main text/branding. True in default.
+    :param randomness: If True, the main text will be colored randomly. If False, it will use a fixed color pattern. True in default.
+    :param clear_technique: The technique to clear the screen. 'os' for using os.system, 'ascii' for using ANSI escape codes. "os" in default.
     :return: void
     """
     if clear_technique == 'os':
@@ -320,7 +335,7 @@ def todo_list_view():
     for j in range(len(todo_list)):
         print(f'{j+1}: {todo_list[j]}')
 
-def todo_add(command_original):
+def todo_add(command_original:str):
     """
     This function adds a new item to the TODO list based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -339,7 +354,7 @@ def todo_add(command_original):
     else:
         print(f'{Colors.RED}Error: The item "{item}" already exists in your TODO list.{Colors.RESET}')
 
-def todo_delete_function(command_original):
+def todo_delete_function(command_original:str):
     """
     This function deletes an item from the TODO list based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -497,7 +512,7 @@ def todo_do_function():
         print(f'{Colors.RED}Error: Invalid input format. Please use the format "index,time".{Colors.RESET}')
         return
 
-def write_worklogs(message):
+def write_worklogs(message:str):
     """
     This function writes a message to the worklogs file.
     :param message: The message to be written to the worklogs file.
@@ -572,7 +587,7 @@ def checklist_list_view():
     else:
         print('Your checklist is empty.')
 
-def checklist_add(command_original):
+def checklist_add(command_original:str):
     """
     This function adds a new item to the checklist based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -606,7 +621,7 @@ def checklist_add(command_original):
     else:
         print(f'{Colors.RED}Error: The item "{item}" already exists in your checklist.{Colors.RESET}')
 
-def checklist_delete_function(command_original):
+def checklist_delete_function(command_original:str):
     """
     This function deletes an item from the checklist based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -683,7 +698,45 @@ def checklist_delete_function(command_original):
         else:
             print('No unchecked items to remove.')
 
-def checklist_mark(command_original,check:bool):
+def checklist_changeorder(command_original:str):
+    """
+    This function changes the order of two items in the checklist based on the index of the given user input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    global checklist_dict
+    update_checklist()
+    if len(checklist_dict) < 2:
+        print(f'{Colors.RED}You need at least two items in your checklist to change their order.{Colors.RESET}')
+        return
+
+    numbers = command_original[len('check changeorder '):].strip().split(',')
+    if len(numbers) != 2:
+        print(f'{Colors.RED}Error: You need to provide exactly two indexes to swap.{Colors.RESET}')
+        return
+
+    try:
+        update_checklist()
+        index1 = int(numbers[0].strip()) - 1
+        index2 = int(numbers[1].strip()) - 1
+        if index1 < 0 or index2 < 0 or index1 >= len(checklist_dict) or index2 >= len(checklist_dict):
+            print(f'{Colors.RED}Error: Index out of range.{Colors.RESET}')
+            return
+        item1 = list(checklist_dict.keys())[index1]
+        item2 = list(checklist_dict.keys())[index2]
+        temp = checklist_dict[item1]
+        checklist_dict[item1] = checklist_dict[item2]
+        checklist_dict[item2] = temp
+
+
+        checklist_save()
+        update_checklist()
+        print(f'Swapped items "{item1}" and "{item2}".')
+    except ValueError:
+        print(f'{Colors.RED}Error: Invalid input. Please enter valid indexes.{Colors.RESET}')
+
+
+def checklist_mark(command_original:str,check:bool):
     """
     This function marks an item in the checklist as done or not done based on the command input.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -738,7 +791,7 @@ def checklist_mark(command_original,check:bool):
 
 # Notes app start
 
-def notes_add(command_original):
+def notes_add(command_original:str):
     """
     This function adds a new note to the notes file.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -756,7 +809,10 @@ def notes_add(command_original):
 
 # Setting functions start
 
-settings_dict = {'openappstayontab': False}  # Default setting
+
+settings_defaults = {'openappstayontab': False}  # Default settings
+
+settings_dict = {'openappstayontab': False}
 settings_names = ['openappstayontab']
 
 def update_settings():
@@ -809,7 +865,7 @@ def settings_list_view():
     else:
         print('Your settings are empty.')
 
-def settings_edit(command_original):
+def settings_edit(command_original:str):
     """
     This function adds a new setting to the settings file.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -831,7 +887,7 @@ def settings_edit(command_original):
     settings_save()
     print(f'Edited setting: {setting_name} with value {setting_value}')
 
-def open_function(command_original):
+def open_function(command_original:str):
     """
     This is a function to open applications on the system.
     :param command_original: The original command input by the user without multiple whitespaces.
@@ -845,10 +901,9 @@ def open_function(command_original):
             current_mouse_loc_x = pyautogui.position().x
             current_mouse_loc_y = pyautogui.position().y
             width, height = pyautogui.size()
-            time.sleep(0.5)
+            time.sleep(0.3)
             pyautogui.click(x=width / 2, y=height / 2)
             pyautogui.moveTo(x=current_mouse_loc_x, y=current_mouse_loc_y)
-
     except subprocess.CalledProcessError:
         time.sleep(0.1)
     else:
@@ -894,13 +949,16 @@ def send_whatsapp_function(command_original:str):
     if timeless:
         kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
 
-def text_to_speech_function(command_original:str):
+def text_to_speech_function(command_original:str,print_log=True):
     """
     This function converts text to speech using gTTS and plays it.
     :param command_original: The original command input by the user without multiple whitespaces.
     :return: void
     """
     text= command_original[len('tts '):]
+    if text == 'help':
+        print('Type "tts <text>" to convert text to speech.')
+        return
     tts = gTTS(text=text, lang='en')
     tts.save('speech.mp3')
     try:
@@ -910,8 +968,11 @@ def text_to_speech_function(command_original:str):
             os.system('mpg123 -q speech.mp3')
     except FileNotFoundError:
         print(f'{Colors.RED}Error: Could not find the audio player. Please install mpg123 or use a different audio player.{Colors.RESET}')
+    except Exception as e:
+        print(f'{Colors.RED}Error: {e}{Colors.RESET}')
     else:
-        print(f'Played audio for: "{neon_text(text)}"')
+        if print_log:
+            print('Text to speech played successfully.')
     # Clean up the audio file after playing
     if os.path.exists('speech.mp3'):
         os.remove('speech.mp3')
@@ -924,7 +985,14 @@ def translate_function(command_original: str):
     """
     # Strip off the "tr " prefix
     cmd = command_original[len('tr '):].strip()
-
+    if not cmd:
+        print(f'{Colors.RED}Error: The "tr" command requires text to translate.{Colors.RESET}')
+        return
+    elif cmd.lower() == 'help':
+        print('Type "tr <text> -> <language>" to translate text to a specified language.'
+              '\nType "tr <text>" to translate text to English.'
+              '\nType "tr <text> -> tts" to translate text to English and convert it to speech.')
+        return
     # Ensure the user typed "text -> lang"
     text = cmd.split('->')[0].strip()
     if '->' not in cmd:
@@ -941,15 +1009,26 @@ def translate_function(command_original: str):
         return
 
     text, language = map(str.strip, cmd.split('->', 1))
-    try:
-        async def _do_translate(t, lang):
-            tr = Translator()
-            return await tr.translate(t, dest=lang)
-        result = asyncio.run(_do_translate(text, language))
-        print(result.text)
-    except Exception as e:
-        print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
+    if not language == 'tts':
+        try:
+            async def _do_translate(t, lang):
+                tr = Translator()
+                return await tr.translate(t, dest=lang)
+            result = asyncio.run(_do_translate(text, language))
+            print(result.text)
+        except Exception as e:
+            print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
+    else:
+        try:
+            async def _do_translate(t, lang):
+                tr = Translator()
+                return await tr.translate(t, dest='en')
+            result = asyncio.run(_do_translate(text, 'en')).text
+            print(f'Translation: {neon_text(result)}')
 
+            text_to_speech_function(f'tts {result}', print_log=False)
+        except Exception as e:
+            print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
 def levenshtein(s: str, t: str) -> int:
     """Compute the Levenshtein edit distance between strings s and t."""
     if s == t:
@@ -1005,6 +1084,13 @@ def unknown_command(command_original, app_name=None):
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
         print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}')
+
+    elif app_name == 'settings':
+        # Suggest a settings subcommand
+        pool = [c.split(' ', 1)[1] for c in commands if c.startswith('settings ')]
+        target = parts[1] if len(parts) > 1 else ''
+        closest = min(pool, key=lambda sub: levenshtein(target, sub))
+        print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}')
 
 def main():
     """
