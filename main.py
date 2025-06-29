@@ -160,7 +160,8 @@ def analyze_input(text_input):
                     case 'add':
                         notes_add(command_original)
             # TODO: Complete the notes app asap.
-
+        case 'coin':
+            coin_flip_function(command_original)
         case 'settings':
             if len(command_arr) >= 2:
                 match command_arr[1]:
@@ -938,13 +939,29 @@ def chat_function():
     """
     print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
 
+def coin_flip_function(command_original:str):
+    """
+    This function simulates a coin flip and prints the result.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    if command_original[len('coin '):].lower() == '':
+        result = random.choice(['Heads', 'Tails'])
+        print(neon_text('Coin Flip Result: ' + result, randomness=True))
+    elif len(command_original[len('coin '):].lower().split(' ')) > 1:
+        result = random.choice(command_original[len('coin '):].split(' '))
+        print(neon_text('Coin Flip Result: ' + result, randomness=True))
+    else:
+        print(f'{Colors.RED}Error: Invalid input. Please use the format "coin" or "coin <option1> <option2> <option n>".{Colors.RESET}')
+
+
 def send_whatsapp_function(command_original:str):
     message = command_original.split("'")[1].strip()
     reciever = command_original.split('to')[1].split('at')[0].strip()
     timeless = True
     if 'at' in command_original:
         timeless = False
-        time = command_original.split('at')[1].strip()
+        # TODO: add time support
     print(reciever)
     if timeless:
         kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
@@ -953,6 +970,7 @@ def text_to_speech_function(command_original:str,print_log=True):
     """
     This function converts text to speech using gTTS and plays it.
     :param command_original: The original command input by the user without multiple whitespaces.
+    :param print_log: If True, it will print the log message after playing the text to speech. True in default.
     :return: void
     """
     text= command_original[len('tts '):]
@@ -1022,7 +1040,7 @@ def translate_function(command_original: str):
         try:
             async def _do_translate(t, lang):
                 tr = Translator()
-                return await tr.translate(t, dest='en')
+                return await tr.translate(t, dest=lang)
             result = asyncio.run(_do_translate(text, 'en')).text
             print(f'Translation: {neon_text(result)}')
 
