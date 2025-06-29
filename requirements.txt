@@ -27,6 +27,12 @@ googletrans>=4.0.0
 # String similarity and distance calculations
 Levenshtein>=0.20.0
 
+# Image processing (for PIL)
+Pillow>=8.0.0
+
+# GUI automation for pyautogui
+pyautogui>=0.9.50
+
 # Standard Library Modules Used:
 # - subprocess (built-in)
 # - time (built-in) 
