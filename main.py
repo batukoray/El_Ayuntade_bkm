@@ -159,6 +159,10 @@ def analyze_input(text_input):
                 match command_arr[1]:
                     case 'add':
                         notes_add(command_original)
+                    case 'rm':
+                        notes_remove_lines(command_original)
+                    case 'ls':
+                        notes_list_view()
             # TODO: Complete the notes app asap.
         case 'coin':
             coin_flip_function(command_original)
@@ -805,6 +809,46 @@ def notes_add(command_original:str):
     with open(user_data.NOTES_FILE_LOC, 'a', encoding='utf-8') as f:
         f.write(f'{note}\n')
     print(f'Added new note: {note}')
+
+def notes_remove_lines(command_original:str):
+    """
+    This function removes a line from the notes file based on the command input.
+    :param command_original: The original command input by the user without multiple whitespaces.
+    :return: void
+    """
+    linecount = int(command_original[len('notes rm '):].strip())
+    if linecount <= 0:
+        print(f'{Colors.RED}Error: The line number must be a positive integer.{Colors.RESET}')
+        return
+    try:
+        with open(user_data.NOTES_FILE_LOC, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        if linecount > len(lines):
+            print(f'{Colors.RED}Error: The line number is out of range.{Colors.RESET}')
+            return
+        removed_line = lines.pop(linecount - 1)
+        with open(user_data.NOTES_FILE_LOC, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+        print(f'Removed line {linecount}: {removed_line.strip()}')
+    except FileNotFoundError:
+        print(f'{Colors.RED}Error: The notes file does not exist.{Colors.RESET}')
+
+def notes_list_view():
+    """
+    This function prints the notes in the notes file.
+    :return: void
+    """
+    if not os.path.exists(user_data.NOTES_FILE_LOC):
+        print('Your notes file is empty.')
+        return
+    with open(user_data.NOTES_FILE_LOC, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    if not lines:
+        print('Your notes file is empty.')
+        return
+    print('Notes:')
+    for i, line in enumerate(lines, start=1):
+        print(f'{i}: {line.strip()}')
 
 # Notes app end
 
