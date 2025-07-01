@@ -1009,6 +1009,13 @@ def send_whatsapp_function(command_original:str):
     print(reciever)
     if timeless:
         kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
+    else:
+        time = command_original.split('at')[1].strip()
+        if ':' in time:
+            hour, minute = map(int, time.split(':'))
+            kit.sendwhatmsg(reciever, message, hour, minute, wait_time=8, tab_close=True)
+        else:
+            print(f'{Colors.RED}Error: Invalid time format. Please use "HH:MM".{Colors.RESET}')
 
 def text_to_speech_function(command_original:str,print_log=True):
     """
