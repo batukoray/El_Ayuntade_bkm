@@ -8,6 +8,24 @@ import user_data
 import random
 import io
 
+# Typing-effect print override
+import builtins
+_original_print = builtins.print
+
+def print(*args, sep=' ', end='\n', typing_speed=0, **kwargs):
+    """
+    Typing-effect print: prints each character with a small delay.
+    :param typing_speed: delay in seconds between characters
+    """
+    if typing_speed <= 0:
+        _original_print(*args, sep=sep, end=end, **kwargs)
+        return
+    text = sep.join(str(a) for a in args) + end
+    for ch in text:
+        sys.stdout.write(ch)
+        sys.stdout.flush()
+        time.sleep(typing_speed)
+
 from simpleeval import simple_eval
 import pywhatkit as kit
 from gtts import gTTS
@@ -23,6 +41,9 @@ class Colors:
     """
     RESET = '\033[0m'
     RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    LIGHT_GRAY = '\033[37m'
 
 help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType "check help" to see the commands for the Checklist app.'
@@ -1006,7 +1027,7 @@ import subprocess
 def get_ollama_response(prompt: str) -> str:
     # Run ollama, capture its stdout, and decode it as text
     result = subprocess.run(
-        ["ollama", "run", settings_dict['default_ollama_model'], prompt],
+        ["ollama", "run", settings_dict['default_ollama_model'], f'{chat_logs_llm} {prompt}'],
         capture_output=True,  # capture both stdout & stderr
         text=True,            # return strings instead of bytes
         check=True            # raise CalledProcessError on non-zero exit
@@ -1024,7 +1045,7 @@ def remove_all_thinks(text, start_tag="<think>", end_tag="</think>"):
         if end == -1:
             break
         text = text[:start] + text[end + len(end_tag):]
-    return text.strip().replace('\n', '')
+    return text.replace('\n', '').replace('<think>', '').replace('</think>', '').strip()
 
 def chat_function():
     """
@@ -1049,32 +1070,31 @@ def chat_function():
         "Honing in on clarity…",
         "Orchestrating wisdom…",
     ]
-    prompt = ('You are the LLM/Chatbot for the CLI application called "El Ayuntade" made by Batu Koray Masak.'
-              'You are a built-in AI assistant for the CLI application, which the app isn\'t purely a chatbot.'
-              'Your purpose is to be helpful for the user whatever their question may be.'
-              'You are a helpful assistant, and you will answer the user\'s questions in a friendly manner.')
+    prompt = ('Your main purpose is to answer the user\'s questions and being helpful.\n'
+              'Avoid long answers; but if the user asks for a long answer, you can give it.\n'
+              'You are an assistant, and you will answer the user\'s questions in a friendly manner.\n')
 
-    print(neon_text('LLM chat mode activated. Type "exit" or "quit" to exit the LLM.'))
+    print(neon_text('LLM chat mode activated. Type "exit" or "quit" to exit the LLM.'),typing_speed=0.001)
     while True:
         try:
-            user_input = input(neon_text("You: "))
+            user_input = input(f'{neon_text(f'You:')} {Colors.LIGHT_GRAY}')
             chat_logs_llm += 'User: ' + user_input + "\n"
         except (EOFError, KeyboardInterrupt):
             print()
             break
         if user_input.strip().lower() in ("exit", "quit"):
-            print("Exiting chat mode.")
+            print("Exiting chat mode.",typing_speed=0.01)
             break
         try:
-            print(neon_text(random.choice(waiting_messages)))
-            ollama_answer = get_ollama_response(f'Prompt: {prompt}\n'
-                                                f'The current chat log so that you have memory: \n{chat_logs_llm}\n'
-                                                f'Now your response to the last user input: \n')
-            chat_logs_llm += 'AI: ' + ollama_answer + "\n"
+            print(neon_text(random.choice(waiting_messages)),typing_speed=0.001)
+            ollama_answer = get_ollama_response(f'{prompt} {user_input}')
+            chat_logs_llm += 'AI: ' + remove_all_thinks(ollama_answer) + "\n"
             clear_last_lines(1)
-            print(f"{neon_text('AI')}: {remove_all_thinks(ollama_answer)}")
+            print(f"{neon_text('AI:')} {Colors.LIGHT_GRAY}{remove_all_thinks(ollama_answer)}{Colors.RESET}",typing_speed=0.004)
         except subprocess.CalledProcessError:
             print(f"{Colors.RED}Error: Chat command failed.{Colors.RESET}")
+
+
 
 
 
@@ -1244,28 +1264,28 @@ def unknown_command(command_original, app_name=None):
     if app_name is None:
         # Compare full commands
         closest = min(commands, key=lambda cmd: levenshtein(command_original, cmd))
-        print(f'{Colors.RED}Unknown command: "{parts[0]}". Did you mean "{closest}"?{Colors.RESET}')
+        print(f'{Colors.RED}Unknown command: "{parts[0]}". Did you mean "{closest}"?{Colors.RESET}',typing_speed=0.01)
 
     elif app_name == 'todo':
         # Suggest a todo subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('todo ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown TODO command: "{target}". Did you mean "todo {closest}"?{Colors.RESET}')
+        print(f'{Colors.RED}Unknown TODO command: "{target}". Did you mean "todo {closest}"?{Colors.RESET}', typing_speed=0.01)
 
     elif app_name == 'check':
         # Suggest a checklist subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('check ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}')
+        print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}', typing_speed=0.01)
 
     elif app_name == 'settings':
         # Suggest a settings subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('settings ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}')
+        print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}', typing_speed=0.01)
 
 def main():
     """
