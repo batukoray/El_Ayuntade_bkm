@@ -868,10 +868,10 @@ def notes_list_view():
 # Setting functions start
 
 
-settings_defaults = {'openappstayontab': False}  # Default settings
+settings_defaults = {'openappstayontab': False,'default_ollama_model':'deepseek-r1'}  # Default settings
 
-settings_dict = {'openappstayontab': False}
-settings_names = ['openappstayontab']
+settings_dict = {'openappstayontab': False,'default_ollama_model': 'llama3.2'}
+settings_names = ['openappstayontab', 'default_ollama_model']
 
 def update_settings():
     """
@@ -935,7 +935,17 @@ def settings_edit(command_original:str):
         return
     setting_name = setting.split(' ')[0].strip()
     try:
-        setting_value = False if setting.split(' ')[1].strip() == 'false' else True
+        match setting.split(' ')[1].strip():
+            case 'true':
+                setting_value = True
+            case 'false':
+                setting_value = False
+            case _:
+                if setting.split(' ')[1].strip().isdigit():
+                    setting_value = int(setting.split(' ')[1].strip())
+                else:
+                    setting_value = setting.split(' ')[1].strip().lower()
+
     except IndexError:
         print(f'{Colors.RED}Error: You need to provide a value for the setting.{Colors.RESET}')
         return
@@ -952,6 +962,9 @@ def open_function(command_original:str):
     :return: void
     """
     app_name = command_original[5:]
+    if app_name == '':
+        print(f'{Colors.RED}Error: You need to provide the name of the application to open.{Colors.RESET}')
+        return
     try:
         subprocess.run(['open', '-a', app_name], check=True)
         update_settings()
@@ -988,13 +1001,83 @@ def animate_logo(n=12,arrows=False):
         print(neon_text(goodbye_text))
         sys.exit(0)
 
+import subprocess
+
+def get_ollama_response(prompt: str) -> str:
+    # Run ollama, capture its stdout, and decode it as text
+    result = subprocess.run(
+        ["ollama", "run", settings_dict['default_ollama_model'], prompt],
+        capture_output=True,  # capture both stdout & stderr
+        text=True,            # return strings instead of bytes
+        check=True            # raise CalledProcessError on non-zero exit
+    )
+    return result.stdout.strip()  # the AI’s reply as a string
+
+chat_logs_llm = ""
+
+def remove_all_thinks(text, start_tag="<think>", end_tag="</think>"):
+    while True:
+        start = text.find(start_tag)
+        if start == -1:
+            break
+        end = text.find(end_tag, start + len(start_tag))
+        if end == -1:
+            break
+        text = text[:start] + text[end + len(end_tag):]
+    return text.strip().replace('\n', '')
 
 def chat_function():
     """
-    This function is a placeholder for the AI chat feature.
-    :return: void
+    This function launches an interactive AI chat loop using ollama.
+    The user can type messages, and 'exit' or 'quit' to leave chat mode.
     """
-    print(f'{Colors.RED}This feature is  not implemented yet.{Colors.RESET}')
+    global chat_logs_llm
+    waiting_messages = [
+        "Pondering the possibilities…",
+        "Consulting the data streams…",
+        "Crunching the cosmic numbers…",
+        "Tuning my neural circuits…",
+        "Summoning the answer…",
+        "Aligning the quantum bits…",
+        "Brewing up a response…",
+        "Digging through the archives…",
+        "Tuning into the mainframe…",
+        "Gearing up intelligence…",
+        "Mapping the knowledge graph…",
+        "Verifying hypotheses…",
+        "Gazing into the algorithmic void…",
+        "Honing in on clarity…",
+        "Orchestrating wisdom…",
+    ]
+    prompt = ('You are the LLM/Chatbot for the CLI application called "El Ayuntade" made by Batu Koray Masak.'
+              'You are a built-in AI assistant for the CLI application, which the app isn\'t purely a chatbot.'
+              'Your purpose is to be helpful for the user whatever their question may be.'
+              'You are a helpful assistant, and you will answer the user\'s questions in a friendly manner.')
+
+    print(neon_text('LLM chat mode activated. Type "exit" or "quit" to exit the LLM.'))
+    while True:
+        try:
+            user_input = input(neon_text("You: "))
+            chat_logs_llm += 'User: ' + user_input + "\n"
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+        if user_input.strip().lower() in ("exit", "quit"):
+            print("Exiting chat mode.")
+            break
+        try:
+            print(neon_text(random.choice(waiting_messages)))
+            ollama_answer = get_ollama_response(f'Prompt: {prompt}\n'
+                                                f'The current chat log so that you have memory: \n{chat_logs_llm}\n'
+                                                f'Now your response to the last user input: \n')
+            chat_logs_llm += 'AI: ' + ollama_answer + "\n"
+            clear_last_lines(1)
+            print(f"{neon_text('AI')}: {remove_all_thinks(ollama_answer)}")
+        except subprocess.CalledProcessError:
+            print(f"{Colors.RED}Error: Chat command failed.{Colors.RESET}")
+
+
+
 
 def coin_flip_function(command_original:str):
     """
