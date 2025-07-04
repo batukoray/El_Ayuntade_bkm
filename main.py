@@ -8,11 +8,9 @@ import user_data
 import random
 import io
 
-from PIL.SpiderImagePlugin import iforms
 from simpleeval import simple_eval
 import pywhatkit as kit
 from gtts import gTTS
-from wikipedia import languages
 from googletrans import Translator
 import asyncio
 import Levenshtein
@@ -73,7 +71,19 @@ commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
             'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help',
             'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!',
-            'tts','tr','send','settings','settings edit','settings help','settings ls','settings add','settings backtodefaults']
+            'tts','tr','send','settings','settings edit','settings help','settings ls','settings add','settings reset',
+            'notes','notes add','notes rm','notes ls']
+
+def set_command_variables(text_input:str) -> []:
+    """
+    This function takes a text input and returns a list containing the command array, the original command, and the lowercased command.
+    :param text_input:
+    :return:
+    """
+    command_arr = [n for n in text_input.lower().split(' ') if n != '']
+    command_original = ' '.join(text_input.strip().split())
+    command_lower = command_original.lower()
+    return [command_original,command_lower,command_arr]
 
 def analyze_input(text_input):
     """
@@ -81,9 +91,9 @@ def analyze_input(text_input):
     :param text_input: The input text from the user.
     :return: void
     """
-    command_arr = [n for n in text_input.lower().split(' ') if n != '']
-    command_original = ' '.join(text_input.strip().split())
-    command_lower = command_original.lower()
+    command_arr = set_command_variables(text_input)[2]
+    command_lower = set_command_variables(text_input)[1]
+    command_original = set_command_variables(text_input)[0]
 
     # If the command is empty, return
     if command_lower == '':
@@ -177,8 +187,8 @@ def analyze_input(text_input):
                         settings_list_view()
                     case 'add':
                         settings_edit(command_original)
-                    case 'backtodefaults':
-                        userinput = input('Are you sure you want to reset the settings to defaults? (y/n): ')
+                    case 'reset':
+                        userinput = input('Are you sure you want to reset the settings to defaults? (y): ')
                         if userinput.lower() == 'y':
                             global settings_dict
                             settings_dict = settings_defaults.copy()
@@ -197,6 +207,9 @@ def analyze_input(text_input):
                 open_function(command_original)
             else:
                 print(f'{Colors.RED}Error: You need to specify an application to open.{Colors.RESET}')
+        case 'o':
+            open_function(set_command_variables(command_original.replace('o ','open '))[0])
+
         case 'help':
             if len(command_arr) == 1:
 
@@ -570,10 +583,10 @@ def checklist_help():
           '\nType "check rm all" to remove all items from the checklist.'
           '\nType "check help" to see this help message again.'
           '\nType "check -check <item_name or index_of_item>" to mark an item as done.'
-          '\nType "check -check <item indexes seperated with commas>" to mark multiple items as done.'
+          '\nType "check -check <item indexes separated with commas>" to mark multiple items as done.'
           '\nType "check -check all" to mark all items as done.'
           '\nType "check -uncheck <item_name or index_of_item>" to mark an item as undone.'
-          '\nType "check -uncheck <item indexes seperated with commas>" to mark multiple items as undone.'
+          '\nType "check -uncheck <item indexes separated with commas>" to mark multiple items as undone.'
           '\nType "check -uncheck all" to mark all items as undone.')
 
 def checklist_list_view():
@@ -847,8 +860,8 @@ def notes_list_view():
         print('Your notes file is empty.')
         return
     print('Notes:')
-    for i, line in enumerate(lines, start=1):
-        print(f'{i}: {line.strip()}')
+    for j, line in enumerate(lines, start=1):
+        print(f'{j}: {line.strip()}')
 
 # Notes app end
 
@@ -1000,7 +1013,17 @@ def coin_flip_function(command_original:str):
 
 
 def send_whatsapp_function(command_original:str):
-    message = command_original.split("'")[1].strip()
+    if "'" in command_original:
+        message = command_original.split("'")[1].strip()
+    else:
+        # Handle case where message is not in quotes
+        parts = command_original.split()
+        if 'to' in parts:
+            to_index = parts.index('to')
+            message = ' '.join(parts[1:to_index])
+        else:
+            print(f'{Colors.RED}Error: Invalid format. Use "send \'message\' to phone_number" or "send message to phone_number".{Colors.RESET}')
+            return
     reciever = command_original.split('to')[1].split('at')[0].strip()
     timeless = True
     if 'at' in command_original:
@@ -1010,9 +1033,9 @@ def send_whatsapp_function(command_original:str):
     if timeless:
         kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
     else:
-        time = command_original.split('at')[1].strip()
-        if ':' in time:
-            hour, minute = map(int, time.split(':'))
+        time_input = command_original.split('at')[1].strip()
+        if ':' in time_input:
+            hour, minute = map(int, time_input.split(':'))
             kit.sendwhatmsg(reciever, message, hour, minute, wait_time=8, tab_close=True)
         else:
             print(f'{Colors.RED}Error: Invalid time format. Please use "HH:MM".{Colors.RESET}')
@@ -1092,8 +1115,8 @@ def translate_function(command_original: str):
             async def _do_translate(t, lang):
                 tr = Translator()
                 return await tr.translate(t, dest=lang)
-            result = asyncio.run(_do_translate(text, 'en')).text
-            print(f'Translation: {neon_text(result)}')
+            result = asyncio.run(_do_translate(text, 'en'))
+            print(f'Translation: {neon_text(result.text)}')
 
             text_to_speech_function(f'tts {result}', print_log=False)
         except Exception as e:
