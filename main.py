@@ -27,7 +27,13 @@ def print(*args, sep=' ', end='\n', typing_speed=0, **kwargs):
         time.sleep(typing_speed)
 
 from simpleeval import simple_eval
-import pywhatkit as kit
+
+
+try:
+    import pywhatkit as kit
+except:
+    print('No internet connection')
+
 from gtts import gTTS
 from googletrans import Translator
 import asyncio
@@ -62,6 +68,12 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
 
 # Color theme of the program:
 neon_colors = ["\033[35m", "\033[95m","\033[94m",  "\033[94m"]
+yellow_colors = [
+    "\033[93m",           # Bright yellow (standard)
+    "\033[38;5;220m",     # Goldenrod / amber
+    "\033[38;5;214m",     # Deep orange / tangerine
+    "\033[38;5;226m"      # Neon lemon yellow
+]
 
 maintext = r"""
 ██████  ██╗╔═██ ╔███    ███╗
@@ -75,7 +87,7 @@ Type "help" to see the available commands.
 """
 goodbye_text = 'Goodbye! | El Ayuntade By: Batu Koray Masak'
 
-def neon_text(text,randomness=True,neon_map_num = 0):
+def neon_text(text,randomness=True,neon_map_num = 0,colors='neon'):
     """
 This function takes a text input and returns it with neon colors applied to each character.
     :param text: The text to be colored.
@@ -84,9 +96,15 @@ This function takes a text input and returns it with neon colors applied to each
     :return: A string with neon colors applied to each character.
     """
     if randomness:
-        return ''.join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
+        if colors == 'neon':
+            return ''.join(f"{random.choice(neon_colors)}{char}"for char in text) + Colors.RESET
+        elif colors == 'yellow':
+            return ''.join(f"{random.choice(yellow_colors)}{char}"for char in text) + Colors.RESET
     else:
-        return ''.join(f"{neon_colors[(j-neon_map_num) % len(neon_colors)]}{char}" for j, char in enumerate(text))
+        if colors == 'neon':
+            return ''.join(f"{neon_colors[(j-neon_map_num) % len(neon_colors)]}{char}" for j, char in enumerate(text)) + Colors.RESET
+        elif colors == 'yellow':
+            return ''.join(f"{yellow_colors[(j-neon_map_num) % len(yellow_colors)]}{char}" for j, char in enumerate(text)) + Colors.RESET
 
 commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
             'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
@@ -1195,12 +1213,10 @@ def translate_function(command_original: str):
             async def _do_translate(t, lang):
                 tr = Translator()
                 return await tr.translate(t, dest=lang)
-
-
-            result = asyncio.run(_do_translate(text, 'en'))
-            print(result.text)
+            result = asyncio.run(_do_translate(text, 'en')).text
+            print(f'En: "{neon_text(result)}"')
         except Exception as e:
-            print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
+            print(f'{Colors.RED}Internet error: Possible lossy internet connection{Colors.RESET}')
         return
 
     text, language = map(str.strip, cmd.split('->', 1))
@@ -1209,8 +1225,8 @@ def translate_function(command_original: str):
             async def _do_translate(t, lang):
                 tr = Translator()
                 return await tr.translate(t, dest=lang)
-            result = asyncio.run(_do_translate(text, language))
-            print(result.text)
+            result = asyncio.run(_do_translate(text, language)).text
+            print(f'{language.capitalize()}: "{neon_text(result)}"')
         except Exception as e:
             print(f"{Colors.RED}Translation failed: {e}{Colors.RESET}")
     else:
@@ -1257,6 +1273,7 @@ def unknown_command(command_original, app_name=None):
     This function handles unknown commands by suggesting the closest command
     from the predefined list, using Levenshtein distance.
     """
+    typing_speed_default = 0.005
     parts = command_original.strip().split()
     if not parts:
         return
@@ -1264,35 +1281,35 @@ def unknown_command(command_original, app_name=None):
     if app_name is None:
         # Compare full commands
         closest = min(commands, key=lambda cmd: levenshtein(command_original, cmd))
-        print(f'{Colors.RED}Unknown command: "{parts[0]}". Did you mean "{closest}"?{Colors.RESET}',typing_speed=0.01)
+        print(f'{Colors.RED}Unknown command: "{parts[0]}". Did you mean "{closest}"?{Colors.RESET}',typing_speed=typing_speed_default)
 
     elif app_name == 'todo':
         # Suggest a todo subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('todo ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown TODO command: "{target}". Did you mean "todo {closest}"?{Colors.RESET}', typing_speed=0.01)
+        print(f'{Colors.RED}Unknown TODO command: "{target}". Did you mean "todo {closest}"?{Colors.RESET}', typing_speed=typing_speed_default)
 
     elif app_name == 'check':
         # Suggest a checklist subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('check ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}', typing_speed=0.01)
+        print(f'{Colors.RED}Unknown checklist command: "{target}". Did you mean "check {closest}"?{Colors.RESET}', typing_speed=typing_speed_default)
 
     elif app_name == 'settings':
         # Suggest a settings subcommand
         pool = [c.split(' ', 1)[1] for c in commands if c.startswith('settings ')]
         target = parts[1] if len(parts) > 1 else ''
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
-        print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}', typing_speed=0.01)
+        print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}', typing_speed=typing_speed_default)
 
 def main():
     """
     This is the main function that runs the program.
     :return: void
     """
-    analyze_input(input(neon_text('>>>')))
+    analyze_input(input(f'{neon_text('>>>')}{Colors.RESET}'))
 
 if __name__ == "__main__":
     try:
