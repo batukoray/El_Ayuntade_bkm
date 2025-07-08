@@ -240,7 +240,6 @@ def analyze_input(text_input):
                         unknown_command(command_original,app_name='settings')
             else:
                 settings_help()
-
         case 'open':
             if len(command_arr) > 1:
                 open_function(command_original)
@@ -295,7 +294,13 @@ def analyze_input(text_input):
             else:
                 print(f'{Colors.RED}Error: The "eval" command requires an expression to evaluate.{Colors.RESET}')
         case 'animate' | 'animation' | 'anim':
-            animate_logo(40,arrows=True)
+            if len(command_arr) == 1:
+                animate_logo(40,arrows=True)
+            elif len(command_arr) == 2:
+                try:
+                    animate_logo(int(float(command_arr[1])*20),arrows=True)
+                except:
+                    print(f'{Colors.RED}Format error. Make sure you write "{command_arr[0]} <animation seconds>".{Colors.RESET}')
         case _:
             unknown_command(command_original)
 
@@ -1098,9 +1103,17 @@ def chat_function():
             user_input = input(f'{neon_text(f'You:')} {Colors.LIGHT_GRAY}')
             chat_logs_llm += 'User: ' + user_input + "\n"
         except (EOFError, KeyboardInterrupt):
+            try:
+                subprocess.run(["pkill", "-f", 'Ollama 2'], check=True)
+            except subprocess.CalledProcessError:
+                continue
             print()
             break
         if user_input.strip().lower() in ("exit", "quit"):
+            try:
+                subprocess.run(["pkill", "-f", 'Ollama 2'], check=True)
+            except subprocess.CalledProcessError:
+                continue
             print("Exiting chat mode.",typing_speed=0.01)
             break
         try:
