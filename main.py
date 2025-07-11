@@ -4,10 +4,12 @@ import sys
 import math
 import os
 import json
+from warnings import catch_warnings
 import user_data
 import random
 import io
-
+import socket
+import speedtest
 # Typing-effect print override
 import builtins
 _original_print = builtins.print
@@ -15,8 +17,11 @@ _original_print = builtins.print
 def print(*args, sep=' ', end='\n', typing_speed=0, **kwargs):
     """
     Typing-effect print: prints each character with a small delay.
+    :param sep: string to separate the arguments
+    :param end: string to append at the end of the print
     :param typing_speed: delay in seconds between characters
     """
+    # TODO: Fix the docstring.
     if typing_speed <= 0:
         _original_print(*args, sep=sep, end=end, **kwargs)
         return
@@ -59,11 +64,10 @@ help_content = ('Type "todo help" to see the commands for the TODO app.'
               '\nType eval <expression> to evaluate a mathematical expression.'
               '\nType "tts help" to see the commands for the Text-to-Speech app.'
               '\nType "tr help" to see the commands for the Translation app.'
-              '\nType "send <phone_number> <message>" to send a WhatsApp message.'
               '\nType "settings help" to see the commands for the Settings app.'
               '\nType "animate" or "animation" or "anim" to see the animated logo.'
               '\nType "clear" or "clr" to clear the screen.'
-              '\nType "help" to see this help message again.'
+              '\nType "coin" to flip a coin.'
               '\nType "quit" to exit the program.')
 
 # Color theme of the program:
@@ -93,6 +97,7 @@ This function takes a text input and returns it with neon colors applied to each
     :param text: The text to be colored.
     :param randomness: If True, each character will be colored randomly from the neon_colors list. It is true in default.
     :param neon_map_num: An integer used to map the colors in a specific order. Is 0 in default. Only effective if randomness is False.
+    :param colors: The colors to use. Default is 'neon'. Choices are 'neon' or 'yellow'. TODO: Add more colors.
     :return: A string with neon colors applied to each character.
     """
     if randomness:
@@ -247,6 +252,8 @@ def analyze_input(text_input):
                 print(f'{Colors.RED}Error: You need to specify an application to open.{Colors.RESET}')
         case 'o':
             open_function(set_command_variables(command_original.replace('o ','open '))[0])
+        case 'speedtest':
+            measure_speed()
 
         case 'help':
             if len(command_arr) == 1:
@@ -260,8 +267,6 @@ def analyze_input(text_input):
                 chat_function()
             else:
                 print(f'{Colors.RED}Error: The "chat" command does not take any arguments.{Colors.RESET}') # TODO: Maybe it will take arguments in the future.
-        case 'send':
-            send_whatsapp_function(command_original)
         case 'tts':
             text_to_speech_function(command_original)
         case 'tr':
@@ -317,7 +322,7 @@ def clear_last_lines(n:int):
         # Clear entire line
         sys.stdout.write('\x1b[2K')
 
-def clear_screen(text = True,randomness=True,clear_technique='os'):
+def clear_screen(text = True,randomness=True,clear_technique='os',subtitle=None):
     """
     This function clears the terminal screen.
     :param text: If True, it will print the main text after clearing the screen. If False, it will not print the main text/branding. True in default.
@@ -332,10 +337,15 @@ def clear_screen(text = True,randomness=True,clear_technique='os'):
             os.system('clear')
         if text:
             print(f"{neon_text(maintext,randomness)}\033[0m")  # Header
+            if subtitle is not None:
+                clear_last_lines(2)
+                print(f"{neon_text('App working with internet connection.' if is_connected_socket() else 'App working without internet connection.' ,randomness)}{Colors.RESET}\n")
     elif clear_technique == 'ascii':
         clear_last_lines(100)
         if text:
             print(f"{neon_text(maintext,randomness)}\033[0m")
+            if subtitle is not None:
+                print(f"{neon_text(subtitle,randomness)}\033[0m")
     else:
         raise Exception(f'The clear technique "{clear_technique}" is not supported.')
 
@@ -1100,7 +1110,7 @@ def chat_function():
     print(neon_text('LLM chat mode activated. Type "exit" or "quit" to exit the LLM.'),typing_speed=0.001)
     while True:
         try:
-            user_input = input(f'{neon_text(f'You:')} {Colors.LIGHT_GRAY}')
+            user_input = input(f'{neon_text('You:')} {Colors.LIGHT_GRAY}')
             chat_logs_llm += 'User: ' + user_input + "\n"
         except (EOFError, KeyboardInterrupt):
             try:
@@ -1125,54 +1135,23 @@ def chat_function():
         except subprocess.CalledProcessError:
             print(f"{Colors.RED}Error: Chat command failed.{Colors.RESET}")
 
-
-
-
-
-
 def coin_flip_function(command_original:str):
     """
     This function simulates a coin flip and prints the result.
     :param command_original: The original command input by the user without multiple whitespaces.
     :return: void
     """
-    if command_original[len('coin '):].lower() == '':
+    choices = command_original[len('coin '):].split()
+    if not choices:
         result = random.choice(['Heads', 'Tails'])
-        print(neon_text('Coin Flip Result: ' + result, randomness=True))
-    elif len(command_original[len('coin '):].lower().split(' ')) > 1:
+        print(neon_text(f'Coin Flip Result: {result}'))
+    elif len(choices) > 1:
         result = random.choice(command_original[len('coin '):].split(' '))
-        print(neon_text('Coin Flip Result: ' + result, randomness=True))
+        print(neon_text(f'Coin Flip Result: {result}.')+'\nKeep in mind that randomness doesn\'t have any meaning. It is just a superstition. -bkm')
+    elif len(choices) == 1:
+        print(f'{Colors.RED}Error: You have to enter at least 2 items.{Colors.RESET}')
     else:
         print(f'{Colors.RED}Error: Invalid input. Please use the format "coin" or "coin <option1> <option2> <option n>".{Colors.RESET}')
-
-
-def send_whatsapp_function(command_original:str):
-    if "'" in command_original:
-        message = command_original.split("'")[1].strip()
-    else:
-        # Handle case where message is not in quotes
-        parts = command_original.split()
-        if 'to' in parts:
-            to_index = parts.index('to')
-            message = ' '.join(parts[1:to_index])
-        else:
-            print(f'{Colors.RED}Error: Invalid format. Use "send \'message\' to phone_number" or "send message to phone_number".{Colors.RESET}')
-            return
-    reciever = command_original.split('to')[1].split('at')[0].strip()
-    timeless = True
-    if 'at' in command_original:
-        timeless = False
-        # TODO: add time support
-    print(reciever)
-    if timeless:
-        kit.sendwhatmsg_instantly(reciever,message,wait_time=8,tab_close=True)
-    else:
-        time_input = command_original.split('at')[1].strip()
-        if ':' in time_input:
-            hour, minute = map(int, time_input.split(':'))
-            kit.sendwhatmsg(reciever, message, hour, minute, wait_time=8, tab_close=True)
-        else:
-            print(f'{Colors.RED}Error: Invalid time format. Please use "HH:MM".{Colors.RESET}')
 
 def text_to_speech_function(command_original:str,print_log=True):
     """
@@ -1280,6 +1259,44 @@ def levenshtein(s: str, t: str) -> int:
             )
     return dist[-1][-1]
 
+def is_connected_socket(host="8.8.8.8", port=53, timeout=3):
+    """
+    Returns True if we can open a TCP socket to host:port within timeout.
+    Default is Google DNS (8.8.8.8:53).
+    :param host: The host to check.
+    :param port: The port to check.
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.connect((host, port))
+        return True
+    except OSError:
+        return False
+
+
+def measure_speed():
+    print(neon_text('Measuring internet speed...(25 seconds)'),typing_speed=0.00025)
+    try:
+        st = speedtest.Speedtest()
+        st.get_best_server()                # pick closest test server
+        download = st.download()            # bits/sec
+        upload   = st.upload()
+        ping      = st.results.ping        # ms
+    except KeyboardInterrupt:
+        print(f'{Colors.RED}Internet connection interrupted.{Colors.RESET}')
+    clear_last_lines(1)
+    print(neon_text(f'Download: {download/1e6:.2f} Mbps'))
+    print(neon_text(f'Upload: {upload/1e6:.2f} Mbps'))
+    print(neon_text(f'Ping: {ping:.1f} ms'))
+    if download/1e6 < 10 and upload/1e6 < 10 and ping > 50:
+        print(f'Conclusion: {Colors.RED}Your internet connection is unstable or slow.{Colors.RESET}')
+    """
+    print(f"Download: {download/1e6:.2f} Mbps")
+    print(f"Upload:   {upload/1e6:.2f} Mbps")
+    print(f"Ping:     {ping:.1f} ms")
+    """
+
 
 def unknown_command(command_original, app_name=None):
     """
@@ -1330,7 +1347,8 @@ if __name__ == "__main__":
             clear_screen(text=False,randomness=True,clear_technique='ascii')
             print(neon_text(maintext,randomness=False,neon_map_num=i))
             time.sleep(0.05)
-        clear_screen(text=True,randomness=False)
+        clear_screen(text=True,randomness=False,subtitle='Haha this is working')
+
     except KeyboardInterrupt:
         clear_screen(text=False)
         print(neon_text(goodbye_text))
