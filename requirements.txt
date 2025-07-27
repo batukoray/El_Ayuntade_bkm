@@ -16,22 +16,25 @@ simpleeval==1.0.3
 pywhatkit==5.4
 
 # Text-to-speech functionality
-gTTS>=2.3.0
+gTTS==2.5.4
 
 # Wikipedia integration
-wikipedia>=1.4.0
+wikipedia==1.4.0
 
 # Google Translate functionality
-googletrans>=4.0.0
+googletrans==4.0.2
 
 # String similarity and distance calculations
-Levenshtein>=0.20.0
+Levenshtein==0.27.1
 
 # Image processing (for PIL)
 Pillow>=8.0.0
 
 # GUI automation for pyautogui
-pyautogui>=0.9.50
+PyAutoGUI==0.9.54
+
+# Internet speed testing
+speedtest-cli==2.1.3
 
 # Standard Library Modules Used:
 # - subprocess (built-in)
