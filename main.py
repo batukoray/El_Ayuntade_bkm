@@ -1277,6 +1277,7 @@ def is_connected_socket(host="8.8.8.8", port=53, timeout=3):
 
 def measure_speed():
     print(neon_text('Measuring internet speed...(25 seconds)'),typing_speed=0.00025)
+    successful = True
     try:
         st = speedtest.Speedtest()
         st.get_best_server()                # pick closest test server
@@ -1285,12 +1286,17 @@ def measure_speed():
         ping      = st.results.ping        # ms
     except KeyboardInterrupt:
         print(f'{Colors.RED}Internet connection interrupted.{Colors.RESET}')
+    except Exception as e:
+        print(f'{Colors.RED}Internet connection error. {Colors.RESET}')
+        successful = False
+
     clear_last_lines(1)
-    print(neon_text(f'Download: {download/1e6:.2f} Mbps'))
-    print(neon_text(f'Upload: {upload/1e6:.2f} Mbps'))
-    print(neon_text(f'Ping: {ping:.1f} ms'))
-    if download/1e6 < 10 and upload/1e6 < 10 and ping > 50:
-        print(f'Conclusion: {Colors.RED}Your internet connection is unstable or slow.{Colors.RESET}')
+    if successful:
+        print(neon_text(f'Download: {download/1e6:.2f} Mbps'))
+        print(neon_text(f'Upload: {upload/1e6:.2f} Mbps'))
+        print(neon_text(f'Ping: {ping:.1f} ms'))
+        if download/1e6 < 10 and upload/1e6 < 10 and ping > 50:
+            print(f'Conclusion: {Colors.RED}Your internet connection is unstable or slow.{Colors.RESET}')
     """
     print(f"Download: {download/1e6:.2f} Mbps")
     print(f"Upload:   {upload/1e6:.2f} Mbps")
