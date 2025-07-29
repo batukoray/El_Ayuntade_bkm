@@ -4,6 +4,7 @@ import random
 import time
 from main import Colors, neon_text, clear_last_lines
 import user_data
+import utils
 # TODO App:
 todo_list = []
 
@@ -86,6 +87,7 @@ def todo_delete_function(command_original:str):
     :param command_original: The original command input by the user without multiple whitespaces.
     :return: void
     """
+    todo_save()
     global todo_list
     command_lower = command_original.lower()
 
@@ -103,11 +105,11 @@ def todo_delete_function(command_original:str):
             except ValueError:
                 print(f'{Colors.RED}Error: Invalid input. Please enter a valid index.{Colors.RESET}')
             return
-        if command_lower != 'todo rm':
+        print(command_lower)
+        if (command_lower != 'todo rm') and (command_lower != 'todo rm all'):
             try:
                 todo_list.remove(command_original[8:])
             except ValueError:
-
                 try:
                     todo_list.remove(command_lower[8:])
                 except ValueError:
@@ -121,6 +123,9 @@ def todo_delete_function(command_original:str):
                     print(f'{command_original[8:]} was deleted.')
             else:
                 print(f'{command_original[8:]} was deleted.')
+        elif command_lower == 'todo rm all':
+            todo_list.clear()
+            print('All items were deleted.')
         else:
             todo_list_view()
             indexes = input(  '\nType the index/indexes of the TODO list content or the name of the item that you want to delete. '
@@ -153,6 +158,7 @@ def todo_delete_function(command_original:str):
                 print('All items were deleted.')
     else:
         print('Your TODO list is empty.')
+
     todo_save()
 
 def todo_changeorder():

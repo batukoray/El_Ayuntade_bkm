@@ -59,15 +59,7 @@ def analyze_input(text_input):
                     case 'ls':
                         todo_list_view()
                     case 'rm':
-                        if len(command_arr) == 3 and command_arr[2] == 'all':
-                            if not todo_list:
-                                print('Your TODO list is already empty.')
-                            else:
-                                todo_list.clear()
-                                todo_save()
-                                print('All items were deleted.')
-                        else:
-                            todo_delete_function(command_original)
+                        todo_delete_function(command_original)
 
                     case 'add':
                         todo_add(command_original)
