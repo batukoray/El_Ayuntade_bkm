@@ -2,7 +2,7 @@ import os
 import json
 import random
 import time
-from main import Colors, neon_text, clear_last_lines
+from el_ayuntade_bkm import *
 import user_data
 import utils
 # TODO App:

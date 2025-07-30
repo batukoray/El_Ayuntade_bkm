@@ -4,7 +4,7 @@ import json
 from idlelib.colorizer import ColorDelegator
 
 import user_data
-from main import *
+from el_ayuntade_bkm import *
 from utils import *
 
 # Checklist App:
