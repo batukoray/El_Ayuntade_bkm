@@ -19,9 +19,7 @@ import pyautogui
 
 from todo_app import *
 from checklist_app import *
-
 from utils import *
-
 
 
 def set_command_variables(text_input:str) -> []:
