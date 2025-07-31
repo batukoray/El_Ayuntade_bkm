@@ -20,6 +20,7 @@ import pyautogui
 from todo_app import *
 from checklist_app import *
 from utils import *
+from mathgame import *
 
 
 def set_command_variables(text_input:str) -> []:
@@ -159,6 +160,9 @@ def analyze_input(text_input):
             text_to_speech_function(command_original)
         case 'tr':
             translate_function(command_original)
+
+        case 'mathgame':
+            mathgame_start(command_original)
         case 'exit' | 'quit':
             if len(command_arr) == 1:
                 clear_screen(text=False)
@@ -401,20 +405,23 @@ def open_function(command_original:str):
     if app_name == '':
         print(f'{Colors.RED}Error: You need to provide the name of the application to open.{Colors.RESET}')
         return
-    try:
-        subprocess.run(['open', '-a', app_name], check=True)
-        update_settings()
-        if settings_dict.get('openappstayontab', False):
-            current_mouse_loc_x = pyautogui.position().x
-            current_mouse_loc_y = pyautogui.position().y
-            width, height = pyautogui.size()
-            time.sleep(0.3)
-            pyautogui.click(x=width / 2, y=height / 2)
-            pyautogui.moveTo(x=current_mouse_loc_x, y=current_mouse_loc_y)
-    except subprocess.CalledProcessError:
-        time.sleep(0.1)
+    # Check the os of the user here please
+    # Macos:
+    if os.name == 'posix':
+        try:
+            subprocess.run(['open', '-a', app_name], check=True)
+            print(neon_text(f'Opened the application "{app_name}" successfully.'))
+        except subprocess.CalledProcessError:
+            print(f'{Colors.RED}Error: Could not open the application "{app_name}". Please make sure it is installed.{Colors.RESET}')
+    elif os.name == 'nt':
+        try:
+            subprocess.run(['start', app_name], shell=True, check=True)
+            print(neon_text(f'Opened the application "{app_name}" successfully.'))
+        except subprocess.CalledProcessError:
+            print(f'{Colors.RED}Error: Could not open the application "{app_name}". Please make sure it is installed.{Colors.RESET}')
     else:
-        print(f'Opened "{app_name.capitalize()}".')
+        print(f'{Colors.RED}Error: Your operating system is not supported for this command.{Colors.RESET}')
+        return
 
 def animate_logo(n=12,arrows=False):
     """
