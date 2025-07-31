@@ -7,8 +7,6 @@ import user_data
 from el_ayuntade_bkm import *
 from utils import *
 
-# Checklist App:
-
 
 checklist_dict = {}
 
