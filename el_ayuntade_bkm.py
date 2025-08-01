@@ -146,8 +146,6 @@ def analyze_input(text_input):
 
         case 'help':
             if len(command_arr) == 1:
-
-
                 print(help_content)
             else:
                 print(f'{Colors.RED}Error: The "help" command does not take any arguments.{Colors.RESET}')
@@ -413,6 +411,7 @@ def open_function(command_original:str):
             print(neon_text(f'Opened the application "{app_name}" successfully.'))
         except subprocess.CalledProcessError:
             print(f'{Colors.RED}Error: Could not open the application "{app_name}". Please make sure it is installed.{Colors.RESET}')
+    # Windows:
     elif os.name == 'nt':
         try:
             subprocess.run(['start', app_name], shell=True, check=True)
