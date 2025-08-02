@@ -32,32 +32,27 @@ def mathgame_text_version(command_original):
     print(neon_text(f'You will be asked {question_count} questions.'))
     print(neon_text('You can answer with numbers only.'))
     print(neon_text('Let\'s start!\n'))
-    for i in range(question_count):
-        num1 = random.randint(1, 1000)
-        num2 = random.randint(1, 1000)
-        sign = random.choice(['+', '-'])
-        if sign == '+':
-            try:
-                user_answer = int(input(neon_text(f'{num1} {sign} {num2} = ')))
-            except ValueError:
-                print(f'{Colors.RED}Numeric value only.{Colors.RESET}')
-                return
-            if user_answer == num1 + num2:
-                print(neon_text('Correct'))
+    try:
+        for i in range(question_count):
+            num1 = random.randint(1, 1000)
+            num2 = random.randint(1, 1000)
+            sign = random.choice(['+', '-'])
+            answer = eval(f'{num1}{sign}{num2}')
+            user_answer = int(input(neon_text(f'{num1} {sign} {num2} = ')))
+            if user_answer == answer:
+                print(neon_text('Correct!'))
                 correct_answers += 1
             else:
-                print(neon_text('Incorrect'))
-        if sign == '-':
-            try:
-                user_answer = int(input(neon_text(f'{num1} {sign} {num2} = ')))
-            except ValueError:
-                print('Numeric value only.')
-                return
-            if user_answer == num1 - num2:
-                print(neon_text('Correct'))
-                correct_answers += 1
-            else:
-                print(neon_text('Incorrect'))
+                print(neon_text(f'Incorrect! The correct answer is {answer}.'))
+    except ValueError:
+        print(neon_text('Invalid input! Please enter numbers only.'))
+        return
+    print(neon_text('Game over!'))
+    print(neon_text('Here are your results:'))
+    print(neon_text(f'You answered {correct_answers} questions correctly out of {question_count} questions.'))
+    print(neon_text(f'Your score: {correct_answers / question_count * 100:.2f}%'))
+    print(neon_text(f'Time taken: {time.perf_counter() - start:.2f} seconds'))
+
 
     end = time.perf_counter()
     print(neon_text(
