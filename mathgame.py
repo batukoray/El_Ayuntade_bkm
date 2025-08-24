@@ -1,3 +1,5 @@
+from utils import clear_last_lines
+
 DIGIT_MAP = {
     "zero": "0", "one": "1", "two": "2", "three": "3", "four": "4",
     "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9"
@@ -15,6 +17,8 @@ from el_ayuntade_bkm import *
 import user_data
 import utils
 import time
+import os
+import re
 import speech_recognition
 
 def mathgame_start(command_original):
@@ -77,29 +81,55 @@ def mathgame_voice_version(command_original):
         else:
             question = f'{num1} {sign} {num2}'
         answer = eval(question)
-        print(neon_text(question))
+        print(f'\n{neon_text(question)}\n')
         text_to_speech_function(f'tts {question}',print_log=False)
-        with speech_recognition.Microphone() as source:
-            recognizer.adjust_for_ambient_noise(source)
-            print(neon_text('Listening for your answer...'))
-            audio = recognizer.listen(source)
+        # Ensure TTS is not captured; on Windows the player is non-blocking
+        if os.name == 'nt':
+            time.sleep(3.0)  # a bit longer to be safe
+        else:
+            time.sleep(0.5)
+
+        # Simple, explicit user gate: press ENTER, then speak
+        print(neon_text('Press ENTER, then speak your answer.'))
+        input()
+
+        user_answer_text = None
         try:
-            user_answer = recognizer.recognize_google(audio)
-            print(neon_text(f'You said: {user_answer}'))
-            # convert spoken words into digits if needed
-            if not user_answer.isdigit():
-                user_answer = words_to_number(user_answer)
-            # remove commas and spaces from formatted numbers
-            user_answer = user_answer.replace(',', '').replace(' ', '')
-            if user_answer.isdigit() and int(user_answer) == answer:
-                print(neon_text('Correct'))
-                correct_answers += 1
+            with speech_recognition.Microphone() as source:
+                recognizer.adjust_for_ambient_noise(source, duration=0.0)
+                clear_last_lines(1)
+                print(neon_text('Listening...'))
+                audio = recognizer.listen(source, timeout=None, phrase_time_limit=8)
+            user_answer_text = recognizer.recognize_google(audio).strip()
+            if user_answer_text:
+                print(neon_text(f'You said: {user_answer_text}'))
             else:
-                print(neon_text('Incorrect'))
+                print(neon_text('Heard silence. Moving on.'))
+                continue
         except speech_recognition.UnknownValueError:
-            print(f'{Colors.RED}Could not understand the audio.{Colors.RESET}')
+            print(neon_text('Could not understand. Moving on.'))
+            continue
         except speech_recognition.RequestError as e:
             print(f'{Colors.RED}Could not request results; {e}.{Colors.RESET}')
+            continue
+
+        # Normalize: prefer digits if present; otherwise map simple digit words
+        raw = user_answer_text.strip()
+        if any(ch.isdigit() for ch in raw):
+            # Strip everything except digits and optional leading '-'
+            is_neg = raw.lstrip().startswith('-')
+            digits_only = re.sub(r'\D', '', raw)
+            user_answer_text = ('-' if is_neg else '') + digits_only
+        else:
+            user_answer_text = words_to_number(raw)
+
+        user_answer_text = user_answer_text.strip()
+
+        if user_answer_text.isdigit() and int(user_answer_text) == answer:
+            print(neon_text('Correct'))
+            correct_answers += 1
+        else:
+            print(neon_text(f'Incorrect! The correct answer is {answer}.'))
 
 
 

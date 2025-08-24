@@ -27,7 +27,10 @@ def set_command_variables(text_input:str) -> []:
     """
     This function takes a text input and returns a list containing the command array, the original command, and the lowercased command.
     :param text_input:
-    :return:
+    :return: [command_original, command_lower, command_arr]
+    1. command_original: The original command input by the user without multiple whitespaces.
+    2. command_lower: The original command input by the user in lowercase without multiple whites
+    3. command_arr: The command input by the user split into an array, all in lowercase and without empty strings.
     """
     command_arr = [n for n in text_input.lower().split(' ') if n != '']
     command_original = ' '.join(text_input.strip().split())
@@ -537,7 +540,7 @@ def text_to_speech_function(command_original:str,print_log=True):
     """
     This function converts text to speech using gTTS and plays it.
     :param command_original: The original command input by the user without multiple whitespaces.
-    :param print_log: If True, it will print the log message after playing the text to speech. True in default.
+    :param print_log: If True, it will print the log message after playing the text to speech.
     :return: void
     """
     text= command_original[len('tts '):]
