@@ -416,6 +416,10 @@ def open_function(command_original:str):
     else:
         print(f'{Colors.RED}Error: Your operating system is not supported for this command.{Colors.RESET}')
         return
+    # Click the middle of the screen if the setting is enabled
+    time.sleep(0.1) # Wait a bit for the app to open
+    if settings_dict['openappstayontab'] == True:
+        pyautogui.click(x=pyautogui.size().width/2, y=pyautogui.size().height/2)
 
 def animate_logo(n=12,arrows=False):
     """
