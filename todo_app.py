@@ -5,6 +5,8 @@ import time
 from el_ayuntade_bkm import *
 import user_data
 import utils
+from datetime import datetime
+
 
 
 todo_list = []
@@ -237,7 +239,7 @@ def todo_do_function():
                 clear_last_lines(2)
         clear_last_lines(1)
         print(neon_text(f'Finished working on "{todo_list[index]}".'))
-        write_worklogs(f'{user_data.username} has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
+        write_worklogs(f'Date: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, {user_data.username} has finished working on the topic {todo_list[index]} for {time_minutes} minutes.')
         todo_list.pop(index)
         todo_save()
 

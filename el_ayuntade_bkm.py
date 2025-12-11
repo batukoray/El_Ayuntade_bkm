@@ -200,7 +200,20 @@ def analyze_input(text_input):
                 except:
                     print(f'{Colors.RED}Format error. Make sure you write "{command_arr[0]} <animation seconds>".{Colors.RESET}')
         case _:
-            unknown_command(command_original)
+            try:
+                expr = command_original
+                expr = expr.replace('^', '**')
+                names = {'pi': math.pi, 'e': math.e}
+                try:
+                    result = simple_eval(expr, names=names)
+                    if isinstance(result, (int, float)):
+                        print(f'{result:,}')
+                    else:
+                        print(result)
+                except Exception:
+                    unknown_command(command_original)
+            except Exception:
+                unknown_command(command_original)
 
 def clear_last_lines(n:int):
     """
