@@ -1,5 +1,5 @@
 import random
-
+import sys
 
 class Colors:
     """
@@ -72,3 +72,16 @@ commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo
             'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!',
             'tts','tr','send','settings','settings edit','settings help','settings ls','settings add','settings reset',
             'notes','notes add','notes rm','notes ls']
+
+def clear_last_lines(n:int):
+    """
+    This function clears the last n lines in the terminal.
+    :param n: The number of lines to clear.
+    :return: void
+    """
+
+    for _ in range(n):
+        # Move cursor up one line
+        sys.stdout.write('\x1b[1A')
+        # Clear entire line
+        sys.stdout.write('\x1b[2K')

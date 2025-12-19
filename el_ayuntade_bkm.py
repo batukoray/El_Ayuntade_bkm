@@ -27,7 +27,10 @@ def set_command_variables(text_input:str) -> []:
     """
     This function takes a text input and returns a list containing the command array, the original command, and the lowercased command.
     :param text_input:
-    :return:
+    :return: [command_original, command_lower, command_arr]
+    1. command_original: The original command input by the user without multiple whitespaces.
+    2. command_lower: The original command input by the user in lowercase without multiple whites
+    3. command_arr: The command input by the user split into an array, all in lowercase and without empty strings.
     """
     command_arr = [n for n in text_input.lower().split(' ') if n != '']
     command_original = ' '.join(text_input.strip().split())
@@ -197,7 +200,20 @@ def analyze_input(text_input):
                 except:
                     print(f'{Colors.RED}Format error. Make sure you write "{command_arr[0]} <animation seconds>".{Colors.RESET}')
         case _:
-            unknown_command(command_original)
+            try:
+                expr = command_original
+                expr = expr.replace('^', '**')
+                names = {'pi': math.pi, 'e': math.e}
+                try:
+                    result = simple_eval(expr, names=names)
+                    if isinstance(result, (int, float)):
+                        print(f'{result:,}')
+                    else:
+                        print(result)
+                except Exception:
+                    unknown_command(command_original)
+            except Exception:
+                unknown_command(command_original)
 
 def clear_last_lines(n:int):
     """
@@ -212,7 +228,7 @@ def clear_last_lines(n:int):
         # Clear entire line
         sys.stdout.write('\x1b[2K')
 
-def clear_screen(text = True,randomness=True,clear_technique='os',subtitle=None):
+def clear_screen(text=True,randomness=True,clear_technique='os',subtitle=None,internet_indicator=False):
     """
     This function clears the terminal screen.
     :param text: If True, it will print the main text after clearing the screen. If False, it will not print the main text/branding. True in default.
@@ -226,24 +242,16 @@ def clear_screen(text = True,randomness=True,clear_technique='os',subtitle=None)
             os.system('cls')
         else:  # For Unix/Linux/Mac
             os.system('clear')
-        if text:
-            print(f"{neon_text(maintext,randomness)}\033[0m")  # Header
-            if subtitle is not None:
-                clear_last_lines(2)
-                print(f"{neon_text('App working with internet connection.' if is_connected_socket() else 'App working without internet connection.' ,randomness)}{Colors.RESET}\n")
     elif clear_technique == 'ascii':
         clear_last_lines(100)
-        if text:
-            print(f"{neon_text(maintext,randomness)}\033[0m")
-            if subtitle is not None:
-                print(f"{neon_text(subtitle,randomness)}\033[0m")
-    else:
-        raise Exception(f'The clear technique "{clear_technique}" is not supported.')
-
-
-# TODO APP WAS HERE.
-
-
+    if text:
+        print(neon_text(maintext,randomness))  # Header
+    if internet_indicator:
+        clear_last_lines(2)
+        print(f"{neon_text('App working with internet connection.' if is_connected_socket() else 'App working without internet connection.', randomness)}{Colors.RESET}\n")
+    if subtitle is not None:
+        clear_last_lines(2)
+        print(f"\n{neon_text(subtitle, randomness)}\033[0m\n")  # Subtitle
 
 # Notes app start
 
@@ -421,6 +429,10 @@ def open_function(command_original:str):
     else:
         print(f'{Colors.RED}Error: Your operating system is not supported for this command.{Colors.RESET}')
         return
+    # Click the middle of the screen if the setting is enabled
+    time.sleep(0.1) # Wait a bit for the app to open
+    if settings_dict['openappstayontab'] == True:
+        pyautogui.click(x=pyautogui.size().width/2, y=pyautogui.size().height/2)
 
 def animate_logo(n=12,arrows=False):
     """
@@ -498,7 +510,7 @@ def chat_function():
     print(neon_text('LLM chat mode activated. Type "exit" or "quit" to exit the LLM.'))
     while True:
         try:
-            user_input = input(f'{neon_text('You:')} {Colors.LIGHT_GRAY}')
+            user_input = input(f"{neon_text('You:')} {Colors.LIGHT_GRAY}")
             chat_logs_llm += 'User: ' + user_input + "\n"
         except (EOFError, KeyboardInterrupt):
             try:
@@ -545,7 +557,7 @@ def text_to_speech_function(command_original:str,print_log=True):
     """
     This function converts text to speech using gTTS and plays it.
     :param command_original: The original command input by the user without multiple whitespaces.
-    :param print_log: If True, it will print the log message after playing the text to speech. True in default.
+    :param print_log: If True, it will print the log message after playing the text to speech.
     :return: void
     """
     text= command_original[len('tts '):]
@@ -593,8 +605,8 @@ def translate_function(command_original: str):
             async def _do_translate(t, lang):
                 tr = Translator()
                 return await tr.translate(t, dest=lang)
-            result = asyncio.run(_do_translate(text, 'en')).text
-            print(f'En: "{neon_text(result)}"')
+            result = asyncio.run(_do_translate(text, 'tr')).text
+            print(f'Tr: "{neon_text(result)}"')
         except Exception:
             print(f'{Colors.RED}Internet error: Possible lossy internet connection{Colors.RESET}')
         return
@@ -733,16 +745,15 @@ def main():
     This is the main function that runs the program.
     :return: void
     """
-    analyze_input(input(f'{neon_text('>>>')}{Colors.RESET}'))
+    analyze_input(input(f"{neon_text('>>>')}{Colors.RESET}"))
 
 if __name__ == "__main__":
     try:
         for i in range(12):
-            clear_screen(text=False,randomness=True,clear_technique='ascii')
+            clear_screen(text=False,randomness=False,clear_technique='ascii')
             print(neon_text(maintext,randomness=False,neon_map_num=i))
             time.sleep(0.05)
-        clear_screen(text=True,randomness=False,subtitle='Haha this is working')
-
+        clear_screen(text=True,randomness=False,internet_indicator=True)
     except KeyboardInterrupt:
         clear_screen(text=False)
         print(neon_text(goodbye_text))
