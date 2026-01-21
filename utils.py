@@ -66,12 +66,23 @@ This function takes a text input and returns it with neon colors applied to each
         elif colors == 'yellow':
             return ''.join(f"{yellow_colors[(j-neon_map_num) % len(yellow_colors)]}{char}" for j, char in enumerate(text)) + Colors.RESET
 
-commands = ['todo','todo ls','todo add','help','exit','chat','quit','open','todo rm','todo changeorder',
-            'todo abcorder','todo cbaorder','todo do', 'todo help', 'todo add', 'todo ls', 'todo rm all',
-            'eval','clear','clr','open', 'check', 'check ls', 'check add', 'check rm', 'check help',
-            'check -check', 'check -uncheck', 'animate', 'animation', 'anim','you found the easter egg!',
-            'tts','tr','send','settings','settings edit','settings help','settings ls','settings add','settings reset',
-            'notes','notes add','notes rm','notes ls']
+commands = [
+    # Top-level
+    'help', 'exit', 'quit', 'clear', 'clr', 'eval', 'open', 'o',
+    'coin', 'tts', 'tr', 'chat', 'send', 'animate', 'animation', 'anim',
+    'speedtest', 'mathgame',
+    # Todo
+    'todo', 'todo help', 'todo ls', 'todo add', 'todo rm', 'todo rm all',
+    'todo changeorder', 'todo abcorder', 'todo cbaorder', 'todo do',
+    # Check
+    'check', 'check help', 'check ls', 'check add', 'check rm',
+    'check changeorder', 'check -check', 'check -uncheck',
+    # Notes
+    'notes', 'notes help', 'notes ls', 'notes add', 'notes rm',
+    # Settings
+    'settings', 'settings help', 'settings ls', 'settings edit',
+    'settings add', 'settings reset',
+]
 
 def clear_last_lines(n:int):
     """

@@ -77,8 +77,12 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
-# User data and logs (optional - remove if you want to track these)
-# user_datas/worklogs.json
+# User data and logs
+checklists.json
+notes.json
+settings.json
+todos.json
+worklogs.json
 
 # Temporary files
 *.tmp
