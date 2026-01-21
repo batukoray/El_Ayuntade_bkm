@@ -13,7 +13,7 @@ def words_to_number(text: str) -> str:
     return "".join(DIGIT_MAP.get(word.lower(), "") for word in text.split())
 import random
 
-from el_ayuntade_bkm import *
+from pulpo import *
 import user_data
 import utils
 import time

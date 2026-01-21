@@ -27,7 +27,7 @@ from mathgame import *
 # READLINE CONFIGURATION
 # ==========================================
 
-HISTORY_FILE = os.path.expanduser('~/.el_ayuntade_history')
+HISTORY_FILE = os.path.expanduser('~/.el_pulpo_history')
 HISTORY_LENGTH = 1000
 
 if os.path.exists(HISTORY_FILE):
