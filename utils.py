@@ -35,16 +35,18 @@ yellow_colors = [
 ]
 
 maintext = r"""
-██████  ██╗╔═██ ╔███    ███╗
-██═╬═██ ██╚╝██╝ ║████  ████║
-██████  █████   ║██╗████╔██║      El Ayuntade By:
-██═╬═██ ██╔╗██╗ ║██╚╗██╔╝██║     Batu Koray Masak
-██████  ██╝╚═██ ╚██ ╚══╝ ██╝
+▓█████  ██▓         ██▓███   █    ██  ██▓     ██▓███   ▒█████   
+▓█   ▀ ▓██▒        ▓██░  ██▒ ██  ▓██▒▓██▒    ▓██░  ██▒▒██▒  ██▒ 
+▒███   ▒██░        ▓██░ ██▓▒▓██  ▒██░▒██░    ▓██░ ██▓▒▒██░  ██▒
+▒▓█  ▄ ▒██░        ▒██▄█▓▒ ▒▓▓█  ░██░▒██░    ▒██▄█▓▒ ▒▒██   ██░
+░▒████▒░██░  █▒    ▒██▒ ░  ░▒▒█████▓ ░██████▒▒██▒ ░   ░▒████▓▒
+░░▒██▒░ █████▒     ▒██▒     ░▒████▓   ░█████░ ██░       ░██▓▒░
 
-Type "help" to see the available commands.
-
+▸ By: Batu Koray Masak
+▸ Type "help" for commands
+                        
 """
-goodbye_text = 'Goodbye! | El Ayuntade By: Batu Koray Masak'
+goodbye_text = 'Goodbye! | El Pulpo By: Batu Koray Masak'
 
 def neon_text(text,randomness=True,neon_map_num = 0,colors='neon'):
     """

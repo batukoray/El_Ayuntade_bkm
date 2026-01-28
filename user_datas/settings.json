@@ -1,4 +1,4 @@
 {
-  "openappstayontab": true,
+  "openappstayontab": false,
   "default_ollama_model": "deepseek-r1"
 }

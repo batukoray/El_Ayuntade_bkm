@@ -298,14 +298,14 @@ def clear_screen(text=True,randomness=True,clear_technique='os',subtitle=None,in
         else:  # For Unix/Linux/Mac
             os.system('clear')
     elif clear_technique == 'ascii':
-        clear_last_lines(100)
+        clear_last_lines(75)
     if text:
         print(neon_text(maintext,randomness))  # Header
     if internet_indicator:
-        clear_last_lines(2)
+        clear_last_lines(1)
         print(f"{neon_text('App working with internet connection.' if is_connected_socket() else 'App working without internet connection.', randomness)}{Colors.RESET}\n")
     if subtitle is not None:
-        clear_last_lines(2)
+        clear_last_lines(1)
         print(f"\n{neon_text(subtitle, randomness)}\033[0m\n")  # Subtitle
 
 # Notes app start
@@ -728,7 +728,7 @@ if __name__ == "__main__":
             clear_screen(text=False,randomness=False,clear_technique='ascii')
             print(neon_text(maintext,randomness=False,neon_map_num=i))
             time.sleep(0.05)
-        clear_screen(text=True,randomness=False,internet_indicator=True)
+        clear_screen(text=True,randomness=False,internet_indicator=False)
     except KeyboardInterrupt:
         clear_screen(text=False)
         print(neon_text(goodbye_text))
