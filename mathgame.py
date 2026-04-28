@@ -148,11 +148,18 @@ def text_to_speech_function(command_original:str,print_log=True):
     tts.save('speech.mp3')
     try:
         if os.name == 'nt':  # For Windows
-            os.system('start -q speech.mp3')
-        else:  # For Unix/Linux/Mac
-            os.system('mpg123 -q speech.mp3')
+            subprocess.run(['start', 'speech.mp3'], shell=True, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif sys.platform == 'darwin':  # For macOS
+            subprocess.run(['afplay', 'speech.mp3'], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:  # For Linux
+            subprocess.run(['mpg123', '-q', 'speech.mp3'], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except FileNotFoundError:
-        print(f'{Colors.RED}Error: Could not find the audio player. Please install mpg123 or use a different audio player.{Colors.RESET}')
+        print(f'{Colors.RED}Error: Could not find the audio player. On Linux, install mpg123.{Colors.RESET}')
+    except subprocess.CalledProcessError as e:
+        print(f'{Colors.RED}Error playing audio: {e}{Colors.RESET}')
     except Exception as e:
         print(f'{Colors.RED}Error: {e}{Colors.RESET}')
     else:

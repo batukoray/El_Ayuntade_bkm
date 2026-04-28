@@ -30,8 +30,10 @@ from mathgame import *
 HISTORY_FILE = os.path.expanduser('~/.el_pulpo_history')
 HISTORY_LENGTH = 1000
 
-if os.path.exists(HISTORY_FILE):
+try:
     readline.read_history_file(HISTORY_FILE)
+except (FileNotFoundError, OSError):
+    pass
 
 atexit.register(readline.write_history_file, HISTORY_FILE)
 readline.set_history_length(HISTORY_LENGTH)
@@ -298,7 +300,7 @@ def clear_screen(text=True,randomness=True,clear_technique='os',subtitle=None,in
         else:  # For Unix/Linux/Mac
             os.system('clear')
     elif clear_technique == 'ascii':
-        clear_last_lines(75)
+        clear_last_lines(50)
     if text:
         print(neon_text(maintext,randomness))  # Header
     if internet_indicator:
@@ -543,11 +545,18 @@ def text_to_speech_function(command_original:str,print_log=True):
     tts.save('speech.mp3')
     try:
         if os.name == 'nt':  # For Windows
-            os.system('start -q speech.mp3')
-        else:  # For Unix/Linux/Mac
-            os.system('mpg123 -q speech.mp3')
+            subprocess.run(['start', 'speech.mp3'], shell=True, check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif sys.platform == 'darwin':  # For macOS
+            subprocess.run(['afplay', 'speech.mp3'], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:  # For Linux
+            subprocess.run(['mpg123', '-q', 'speech.mp3'], check=True,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except FileNotFoundError:
-        print(f'{Colors.RED}Error: Could not find the audio player. Please install mpg123 or use a different audio player.{Colors.RESET}')
+        print(f'{Colors.RED}Error: Could not find the audio player. On Linux, install mpg123.{Colors.RESET}')
+    except subprocess.CalledProcessError as e:
+        print(f'{Colors.RED}Error playing audio: {e}{Colors.RESET}')
     except Exception as e:
         print(f'{Colors.RED}Error: {e}{Colors.RESET}')
     else:
@@ -715,12 +724,214 @@ def unknown_command(command_original, app_name=None):
         closest = min(pool, key=lambda sub: levenshtein(target, sub))
         print(f'{Colors.RED}Unknown settings command: "{target}". Did you mean "settings {closest}"?{Colors.RESET}')
 
+
+def _safe_load_json(file_path, fallback):
+    """
+    Safely loads a JSON file. If the file is missing, empty, or invalid, returns fallback.
+    """
+    try:
+        if not os.path.exists(file_path):
+            return fallback
+        if os.path.getsize(file_path) == 0:
+            return fallback
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return fallback
+
+
+def _format_todos_for_llm(todos):
+    """
+    Converts the todos data into a compact Markdown section for Claude.
+    """
+    lines = ['## Todos']
+
+    if not todos:
+        lines.append('No todos.')
+        return lines
+
+    if isinstance(todos, dict):
+        todo_items = todos.get('todos', todos.get('items', todos.get('data', [])))
+    else:
+        todo_items = todos
+
+    if not todo_items:
+        lines.append('No todos.')
+        return lines
+
+    if isinstance(todo_items, dict):
+        todo_items = list(todo_items.values())
+
+    for item in todo_items:
+        if isinstance(item, dict):
+            text = (
+                item.get('text')
+                or item.get('task')
+                or item.get('title')
+                or item.get('name')
+                or str(item)
+            )
+            done = bool(item.get('done', item.get('completed', item.get('checked', False))))
+            mark = 'x' if done else ' '
+            lines.append(f'- [{mark}] {text}')
+        else:
+            lines.append(f'- [ ] {item}')
+
+    return lines
+
+
+def _format_notes_for_llm(notes):
+    """
+    Converts the notes data into a compact Markdown section for Claude.
+    """
+    lines = ['## Notes']
+
+    if not notes:
+        lines.append('No notes.')
+        return lines
+
+    if isinstance(notes, dict):
+        note_items = notes.get('notes', notes.get('items', notes.get('data', [])))
+    else:
+        note_items = notes
+
+    if not note_items:
+        lines.append('No notes.')
+        return lines
+
+    if isinstance(note_items, str):
+        note_items = [line for line in note_items.splitlines() if line.strip()]
+
+    if isinstance(note_items, dict):
+        note_items = list(note_items.values())
+
+    for i, note in enumerate(note_items, start=1):
+        if isinstance(note, dict):
+            title = note.get('title') or note.get('name') or f'Note {i}'
+            body = note.get('body') or note.get('text') or note.get('content') or ''
+            lines.append(f'### {title}')
+            if body:
+                lines.append(str(body))
+        else:
+            lines.append(f'{i}. {note}')
+
+    return lines
+
+
+def _format_checklists_for_llm(checklists):
+    """
+    Converts checklist data into a compact Markdown section for Claude.
+    """
+    lines = ['## Checklists']
+
+    if not checklists:
+        lines.append('No checklists.')
+        return lines
+
+    if isinstance(checklists, dict):
+        checklist_groups = checklists.get('checklists', checklists.get('items', checklists))
+    else:
+        checklist_groups = checklists
+
+    if isinstance(checklist_groups, list):
+        for group_index, group in enumerate(checklist_groups, start=1):
+            if isinstance(group, dict):
+                name = group.get('name') or group.get('title') or f'Checklist {group_index}'
+                items = group.get('items') or group.get('tasks') or group.get('sections') or []
+            else:
+                name = f'Checklist {group_index}'
+                items = [group]
+
+            lines.append(f'### {name}')
+            _append_checklist_items(lines, items)
+        return lines
+
+    if isinstance(checklist_groups, dict):
+        if all(isinstance(value, bool) for value in checklist_groups.values()):
+            for name, checked in checklist_groups.items():
+                mark = 'x' if checked else ' '
+                lines.append(f'- [{mark}] {name}')
+        else:
+            for name, items in checklist_groups.items():
+                lines.append(f'### {name}')
+                _append_checklist_items(lines, items)
+        return lines
+
+    lines.append(str(checklist_groups))
+    return lines
+
+
+def _append_checklist_items(lines, items):
+    """
+    Appends checklist items to a Markdown line list.
+    """
+    if not items:
+        lines.append('- [ ] No items.')
+        return
+
+    if isinstance(items, dict):
+        items = list(items.values())
+
+    if not isinstance(items, list):
+        items = [items]
+
+    for item in items:
+        if isinstance(item, dict):
+            text = (
+                item.get('text')
+                or item.get('task')
+                or item.get('title')
+                or item.get('name')
+                or str(item)
+            )
+            checked = bool(item.get('checked', item.get('done', item.get('completed', False))))
+            mark = 'x' if checked else ' '
+            lines.append(f'- [{mark}] {text}')
+        else:
+            lines.append(f'- [ ] {item}')
+
+
+def concatonate_files():
+    """
+    Creates one Claude-readable Markdown overview file from todos, notes, and checklists.
+    The source JSON files remain the source of truth; LLM_data.md is only a generated snapshot.
+    """
+    user_data_dir = os.path.dirname(user_data.TODO_FILE_LOC)
+    llm_file_path = os.path.join(user_data_dir, 'LLM_data.md')
+
+    todos = _safe_load_json(user_data.TODO_FILE_LOC, [])
+    notes = _safe_load_json(user_data.NOTES_FILE_LOC, [])
+    checklists = _safe_load_json(user_data.CHECKLIST_FILE_LOC, [])
+
+    overview_lines = [
+        '# El Pulpo Current Context',
+        '',
+        f'Generated at: {time.strftime("%Y-%m-%d %H:%M:%S")}',
+        '',
+    ]
+
+    overview_lines.extend(_format_todos_for_llm(todos))
+    overview_lines.append('')
+    overview_lines.extend(_format_notes_for_llm(notes))
+    overview_lines.append('')
+    overview_lines.extend(_format_checklists_for_llm(checklists))
+
+    overview_text = '\n'.join(overview_lines)
+
+    try:
+        with open(llm_file_path, 'w', encoding='utf-8') as f:
+            f.write(overview_text)
+    except OSError:
+        pass
+
+
 def main():
     """
     This is the main function that runs the program.
     :return: void
     """
     analyze_input(input(f"{neon_text('>>>',randomness=False,neon_map_num=4)}{Colors.RESET}"))
+    concatonate_files()
 
 if __name__ == "__main__":
     try:
